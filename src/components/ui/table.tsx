@@ -123,6 +123,68 @@ function TableHead({
   )
 }
 
+type TableSortDirection = "ascending" | "descending"
+
+/**
+ * v34 (spec: DataTable, "Sort button" and "Sorted"): a sortable column header. The `th` carries `aria-sort` only while the
+ * column is sorted (one column at a time; your sort state decides which); it holds a `<button type="button">` with the
+ * label and the sort icon, an up and a down arrow. Idle, the label is the header's `ink-secondary` (`ink` on hover) and both
+ * arrows are `ink-muted`; sorted, the label is `ink` and a single arrow (up ascending, down descending) is `primary-text`.
+ * `numeric` right-aligns it over a number column and puts the icon before the label, so the label lines up with the numbers.
+ * Focus is the global outline with `radius-sm` corners. Sorting itself is your code: `onSort` is the button's click.
+ */
+function TableSortHead({
+  direction,
+  onSort,
+  numeric = false,
+  className,
+  children,
+  ...props
+}: Omit<React.ComponentProps<"th">, "aria-sort" | "onClick"> & {
+  /** The column's sort, or `false` when it is not the sorted column. */
+  direction: TableSortDirection | false
+  onSort: () => void
+  numeric?: boolean
+}) {
+  const sorted = direction !== false
+  return (
+    <TableHead
+      data-slot="table-sort-head"
+      aria-sort={sorted ? direction : undefined}
+      numeric={numeric}
+      className={className}
+      {...props}
+    >
+      <button
+        type="button"
+        data-slot="table-sort"
+        onClick={onSort}
+        className={cn(
+          "m-0 inline-flex cursor-pointer items-center gap-2 rounded-(--ds-radius-sm) border-0 bg-transparent p-0 font-[inherit] whitespace-nowrap focus-visible:outline-solid",
+          sorted ? "text-foreground" : "hover:text-foreground",
+          numeric && "flex-row-reverse"
+        )}
+      >
+        {children}
+        <svg
+          data-slot="table-sort-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          className={cn("size-(--icon-ui) flex-none", sorted ? "text-primary-text" : "text-ink-muted")}
+        >
+          <path data-slot="table-sort-up" d="m8 9 4-4 4 4" className={direction === "descending" ? "opacity-0" : undefined} />
+          <path data-slot="table-sort-down" d="m8 15 4 4 4-4" className={direction === "ascending" ? "opacity-0" : undefined} />
+        </svg>
+      </button>
+    </TableHead>
+  )
+}
+
 /** The actions column's header: no visible text, but a name for assistive technology. */
 function TableActionsHead({
   className,
@@ -309,4 +371,6 @@ export {
   TableRow,
   TableRowHead,
   TableSkeletonRow,
+  TableSortHead,
 }
+export type { TableSortDirection }
