@@ -40,6 +40,9 @@ export function isSourcePath(pathname: string): boolean {
  * response headers (the asset route's sandbox CSP, the search index's fixed CSP, the source download's sandbox CSP, and one fixed
  * refusal header set each, TC-459, TC-472, TC-495). The auth gate still runs for them, so an anonymous request is still the sign-in redirect.
  */
+/** The configured brand logo (`src/app/api/brand/logo/route.ts`), which sandboxes an SVG itself. */
+export const BRAND_LOGO_PATH = "/api/brand/logo";
+
 export function routeOwnsResponseHeaders(pathname: string): boolean {
-  return isAssetPath(pathname) || isSearchIndexPath(pathname) || isSourcePath(pathname);
+  return isAssetPath(pathname) || isSearchIndexPath(pathname) || isSourcePath(pathname) || pathname === BRAND_LOGO_PATH;
 }

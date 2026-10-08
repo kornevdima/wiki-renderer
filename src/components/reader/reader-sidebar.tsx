@@ -32,7 +32,7 @@ export function ReaderSidebar({ wikiId, wiki, tree, activePath }: ReaderSidebarP
   return (
     <div data-testid="reader-sidebar" className="flex h-full min-h-0 flex-col bg-muted text-foreground print:hidden">
       <div className="relative flex h-(--topbar-h) flex-none items-center px-6">
-        <Brand company={tBrand("company")} product={t("brandProduct")} alwaysShowText />
+        <Brand company={tBrand("company")} product={t("brandProduct")} initials={tBrand("initials")} logo={tBrand("logo")} alwaysShowText />
         {/* After the brand link in the DOM, so the drawer's focus-on-open still lands on the brand (US-222, E3-D11). */}
         <NavClose label={t("closeNavigation")} />
       </div>

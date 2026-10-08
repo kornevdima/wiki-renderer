@@ -28,7 +28,7 @@ export default async function NotFound() {
 
   return (
     <NotFoundView
-      brand={{ company: tBrand("company"), product: tBrand("product") }}
+      brand={{ company: tBrand("company"), product: tBrand("product"), initials: tBrand("initials"), logo: tBrand("logo") }}
       heading={t("heading")}
       description={t("description")}
       homeLabel={t("homeLink")}

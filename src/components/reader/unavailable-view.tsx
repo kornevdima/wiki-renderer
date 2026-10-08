@@ -42,7 +42,7 @@ export function UnavailableView(props: UnavailableViewProps) {
   const tRetry = useTranslations("retryView");
   const tBrand = useTranslations("brand");
   const tShell = useTranslations("readerShell");
-  const brand = { company: tBrand("company"), product: tShell("brandProduct") };
+  const brand = { company: tBrand("company"), product: tShell("brandProduct"), initials: tBrand("initials"), logo: tBrand("logo") };
 
   const back = (variant: "solid" | "outline") => (
     <Button asChild variant={variant} size="sm">

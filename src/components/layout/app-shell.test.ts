@@ -131,8 +131,11 @@ describe("Brand", () => {
   it("links to / with the mark and both lines of text, which are visually hidden (not removed) on a narrow screen", () => {
     const out = html(createElement(Brand, { company: "The Firm", product: "wiki-renderer" }));
     expect(out).toMatch(/<a [^>]*href="\/"/);
-    expect(out).toContain("esg-logo-mark.png");
-    expect(out).toContain('alt=""');
+    expect(out).toMatch(/<span data-testid="brand-avatar" aria-hidden="true"[^>]*bg-\(image:--gradient-brand\)[^>]*>TF<\/span>/);
+    expect(out).not.toContain("<img");
+    const branded = html(createElement(Brand, { company: "Acme", product: "Docs", logo: "/api/brand/logo" }));
+    expect(branded).toMatch(/<img src="\/api\/brand\/logo" alt=""[^>]*data-testid="brand-logo"/);
+    expect(branded).not.toContain("brand-avatar");
     expect(out).toContain("The Firm");
     expect(out).toContain("max-md:sr-only");
   });

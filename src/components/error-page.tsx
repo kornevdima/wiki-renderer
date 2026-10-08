@@ -22,7 +22,7 @@ export function ErrorPage({ onRetry }: { onRetry: () => void }) {
   const tUnavailable = useTranslations("unavailableView");
   const tBrand = useTranslations("brand");
   const tShell = useTranslations("readerShell");
-  const brand = { company: tBrand("company"), product: tShell("brandProduct") };
+  const brand = { company: tBrand("company"), product: tShell("brandProduct"), initials: tBrand("initials"), logo: tBrand("logo") };
 
   return (
     <BareFrame brand={brand} testId="error-page">

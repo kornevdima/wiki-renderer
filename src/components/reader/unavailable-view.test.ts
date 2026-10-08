@@ -67,7 +67,7 @@ describe("S11 (X6, US-100): UnavailableView takes only a kind, and the uniform v
     expect(out).not.toContain("<title>");
     expect(out.match(/<main\b/g)).toHaveLength(1);
     const text = out.replace(/<[^>]*>/g, "|").split("|").filter(Boolean);
-    expect(text).toEqual(["The Firm", "Wikis", "This page is unavailable", "It doesn&#x27;t exist, or you don&#x27;t have access to it.", "Back to your wikis"]);
+    expect(text).toEqual(["WR", "Wiki Renderer", "Wikis", "This page is unavailable", "It doesn&#x27;t exist, or you don&#x27;t have access to it.", "Back to your wikis"]);
   });
 
   it("not-found.tsx receives no params and draws kind=no-access", () => {
@@ -86,10 +86,10 @@ describe("S11 (X6, US-100): UnavailableView takes only a kind, and the uniform v
   });
 
   it("F-B: the 404 <title> has two halves, and neither may go: the head metadata (raw HTML) and the body <title> (survives hydration)", async () => {
-    expect(await generateMetadata()).toEqual({ title: "This page is unavailable · ESG Wikis" });
+    expect(await generateMetadata()).toEqual({ title: "This page is unavailable · Wiki Renderer" });
     const out = html(createElement(WikiNotFound));
     expect(out.match(/<title>/g)).toHaveLength(1);
-    expect(out.startsWith('<title>This page is unavailable · ESG Wikis</title><div data-slot="bare-frame"')).toBe(true);
+    expect(out.startsWith('<title>This page is unavailable · Wiki Renderer</title><div data-slot="bare-frame"')).toBe(true);
     expect(out.endsWith(html(createElement(UnavailableView, { kind: "no-access" })))).toBe(true);
   });
 });
@@ -158,7 +158,7 @@ describe("S12 (X9, US-158 sc.6-7): the shell's only way out of the wiki is All w
 describe("S5 + S9 (TC-426, TC-439): the retry screen carries only the accepted copy", () => {
   it("no-cache: accepted copy verbatim, one <title>, the retry link and the back link, nothing else", () => {
     const out = html(createElement(UnavailableView, { kind: "no-cache", retryHref: "/w/abc/x.md" }));
-    expect(out).toContain("<title>Temporarily unavailable · ESG Wikis</title>");
+    expect(out).toContain("<title>Temporarily unavailable · Wiki Renderer</title>");
     expect(out).toMatch(/<h1 [^>]*>Temporarily unavailable<\/h1>/);
     expect(out).toMatch(/<p [^>]*>We can&#x27;t reach this wiki&#x27;s source right now. Try again in a moment.<\/p>/);
     expect(out).toMatch(/<a href="\/w\/abc\/x.md" data-testid="unavailable-retry"[^>]*>(<svg[^>]*>.*?<\/svg>)?Try again<\/a>/);
@@ -256,8 +256,9 @@ describe("US-195: the five views' look", () => {
       expect(bar).toMatch(/\bborder-b\b/);
       expect(bar).toContain("print:hidden");
       expect(bar).toContain('data-testid="brand"');
-      expect(bar).toContain('src="/esg-logo-mark.png"');
-      expect(bar).toContain(">The Firm<");
+      expect(bar).toContain('data-testid="brand-avatar"');
+      expect(bar).toContain(">WR<");
+      expect(bar).toContain(">Wiki Renderer<");
       expect(bar).toContain(">Wikis<");
       expect(bar).not.toContain("All wikis");
       expect(bar.match(/<a\b/g)).toHaveLength(1);
@@ -304,7 +305,7 @@ describe("US-195: the five views' look", () => {
   it("the bare views name no wiki, repository or page: their only inputs are the kind and the retry href, and the text is fixed", () => {
     for (const out of [retry, noAccess]) {
       const visible = out.replace(/<title>.*?<\/title>/, "").replace(/<[^>]*>/g, "|").split("|").filter(Boolean);
-      expect(visible.slice(0, 2)).toEqual(["The Firm", "Wikis"]);
+      expect(visible.slice(0, 3)).toEqual(["WR", "Wiki Renderer", "Wikis"]);
       expect(visible).toHaveLength(visible.length); // text nodes only: no attribute carries a name
     }
     expect(retry).not.toMatch(/guide|repo|\.md/i);

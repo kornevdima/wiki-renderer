@@ -57,10 +57,13 @@ describe("L3 (US-098 S3, TC-464): the interface language is always English", () 
   });
 
   it("the request config returns en and en messages without reading a cookie, a header or a query", async () => {
+    vi.stubEnv("WIKI_DIRS", "w=/tmp/w");
     const mod = await import("../i18n/request");
     const config = await (mod.default as unknown as () => Promise<{ locale: string; messages: Record<string, unknown> }>)();
     expect(config.locale).toBe("en");
+    // The brand strings come from the environment (`src/lib/branding.ts`); unset, they equal the file's defaults.
     expect(config.messages).toEqual(messages);
+    vi.unstubAllEnvs();
   });
 
   it("the config and the root layout have no locale detection: no cookies, headers, NEXT_LOCALE, Accept-Language, locale/lang query", () => {

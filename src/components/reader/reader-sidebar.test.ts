@@ -30,7 +30,8 @@ describe("ReaderSidebar", () => {
     const order = ['data-testid="brand"', 'data-testid="reader-all-wikis"', 'data-testid="reader-wiki-name"', 'data-testid="reader-nav"', 'data-testid="locale-switcher"'].map((id) => out.indexOf(id));
     expect(order.every((index) => index >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
-    expect(out).toContain("The Firm");
+    expect(out).toContain("Wiki Renderer");
+    expect(out).toContain(">WR</span>");
     expect(out).toContain(">Wikis</span>");
     // US-212 R12: the select leads with the globe glyph and is the chrome's 40px (`control-h-m`) height.
     expect(out).toMatch(/>Language <span class="relative block">.*lucide-globe.*<select id="locale-switcher-select"[^>]*min-h-\(--control-h-m\)/);

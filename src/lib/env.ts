@@ -2,6 +2,12 @@ import "server-only";
 
 import { z } from "zod";
 
+/** An optional var where an empty or whitespace-only value means "not configured". */
+const blankAsUnset = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  z.string().optional(),
+);
+
 /**
  * Zod-validated environment schema. Only `WIKI_DIRS` is required: every other variable has a code default.
  * `.env.local.example` documents each one.
@@ -18,6 +24,16 @@ const schema = z.object({
   WIKI_MAX_BYTES: z.coerce.number().int().positive().default(209715200), // 200 MB
   // How long a folder must have been unreadable before the reader shows the staleness notice.
   WIKI_SNAPSHOT_STALE_NOTICE_MS: z.coerce.number().int().nonnegative().default(0),
+
+  // ── Branding (optional; `src/lib/branding.ts`) ─────────────────────────
+  BRAND_NAME: z.string().trim().min(1).default("Wiki Renderer"),
+  BRAND_PRODUCT: z.string().trim().min(1).default("Wikis"),
+  // One to three characters for the avatar; derived from BRAND_NAME when unset.
+  BRAND_INITIALS: blankAsUnset.pipe(z.string().trim().min(1).max(3).optional()),
+  // A logo image file (png, jpg, svg, webp) shown in place of the initials avatar.
+  BRAND_LOGO: blankAsUnset,
+  // The tab-title suffix ("<page> · <wiki> · <suffix>"); BRAND_NAME when unset.
+  BRAND_TITLE: blankAsUnset,
 
   // ── Runtime / observability (optional) ──────────────────────────────────
   // pino level names, lowercase. No code default here: the logger picks its own default when this is unset.

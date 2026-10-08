@@ -30,6 +30,21 @@ or from its parent's name when the folder is called `wiki`. With one wiki, `/` r
 fingerprinted by path, size and mtime, and a changed fingerprint rebuilds the snapshot. The server binds to
 `127.0.0.1` because nothing is access-controlled.
 
+## Branding
+
+The default brand is neutral: **Wiki Renderer** / **Wikis**, a **WR** initials avatar on the design system's brand
+gradient, and tab titles ending "· Wiki Renderer". There is no ESG logo in the repo. A deployment brands itself with
+`BRAND_NAME`, `BRAND_PRODUCT`, `BRAND_INITIALS`, `BRAND_LOGO` (an image file, served at `/api/brand/logo`) and
+`BRAND_TITLE` (see `.env.local.example`). For example, a firm's own branding:
+
+```bash
+BRAND_NAME="The Firm" BRAND_TITLE="The Firm Wikis" \
+BRAND_LOGO=/path/to/logo.png npm run dev
+```
+
+`src/lib/branding.ts` reads the env, and `src/i18n/request.ts` merges it into the `brand.*`, `readerShell.brandProduct`
+and `documentTitle.suffix` messages. Screens never read the env themselves.
+
 ## Folder map
 
 | Path | What |
@@ -42,7 +57,7 @@ fingerprinted by path, size and mtime, and a changed fingerprint rebuilds the sn
 | `src/app/api/wikis/[wikiId]/{asset,source,search-index}/` | the snapshot's files, by sha |
 | `src/app/page.tsx` | the wiki list, or a redirect when only one wiki is configured |
 | `src/components/reader/` | reader UI (shell, sidebar, nav tree, outline, search dialog, PDF, source view) |
-| `src/components/ui/`, `src/components/layout/`, `src/app/esg-theme.css`, `src/fonts/` | **installed** from the ESG design-system registry; don't hand-edit |
+| `src/components/ui/`, `src/components/layout/`, `src/app/esg-theme.css`, `src/fonts/` | **installed** from the ESG design-system registry; don't hand-edit. **Exception:** `layout/brand.tsx` is app-owned since 2026-10-08 (initials avatar or configured logo instead of the ESG mark); don't overwrite it from the registry |
 | `tests/e2e/`, `tests/fixtures/` | Playwright smoke suite and its two sample wikis |
 
 ## Conventions

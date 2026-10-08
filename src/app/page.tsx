@@ -1,4 +1,5 @@
 import { BookIcon } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -8,8 +9,15 @@ import { MAIN_REGION, PAGE_CONTENT_CLASS } from "@/components/layout/main-region
 import { PageHeader } from "@/components/layout/page-header";
 import { Topbar } from "@/components/layout/topbar";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { documentTitle } from "@/components/reader/document-title";
 import { ThemeControl } from "@/components/theme-control";
 import { listWikis } from "@/content/runtime";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("home");
+  const tTitle = await getTranslations("documentTitle");
+  return { title: documentTitle({ screen: t("heading"), suffix: tTitle("suffix") }) };
+}
 
 /**
  * `/`: with one configured wiki, straight to it; with several, a list of them (name and folder). Nothing here builds a
@@ -26,7 +34,7 @@ export default async function Home() {
 
   return (
     <div data-testid="app-shell">
-      <Topbar leading={<Brand company={tBrand("company")} product={tBrand("product")} />}>
+      <Topbar leading={<Brand company={tBrand("company")} product={tBrand("product")} initials={tBrand("initials")} logo={tBrand("logo")} />}>
         <LocaleSwitcher label={tLocale("label")} optionLabels={{ en: tLocale("en") }} />
         <ThemeControl />
       </Topbar>

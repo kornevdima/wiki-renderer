@@ -8,13 +8,15 @@ import { SkipLink } from "@/components/layout/skip-link";
 import { NonceBridge } from "@/components/nonce-bridge";
 import { ThemeProvider } from "@/components/theme-control";
 import { fontVariableClasses } from "@/fonts";
+import { branding } from "@/lib/branding";
 import { parseTheme, themeAttribute, THEME_COOKIE } from "@/lib/theme";
 
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "wiki-renderer",
-};
+/** The fallback tab title: the brand's title suffix ("Wiki Renderer" by default, `src/lib/branding.ts`). */
+export function generateMetadata(): Metadata {
+  return { title: branding().titleSuffix };
+}
 
 export default async function RootLayout({
   children,
