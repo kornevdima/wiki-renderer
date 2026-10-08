@@ -1,0 +1,162 @@
+{
+  "home": {
+    "heading": "Wikis",
+    "tagline": "Obsidian-flavoured Markdown folders on this machine, rendered read-only."
+  },
+  "homeListing": {
+    "heading": "Configured wikis"
+  },
+  "skipLink": {
+    "label": "Skip to content"
+  },
+  "appShell": {
+    "openNavigation": "Open navigation"
+  },
+  "breadcrumbs": {
+    "label": "Breadcrumb"
+  },
+  "brand": {
+    "company": "The Firm",
+    "product": "wiki-renderer"
+  },
+  "toast": {
+    "notifications": "Notifications",
+    "dismiss": "Dismiss"
+  },
+  "dates": {
+    "jan": "Jan",
+    "feb": "Feb",
+    "mar": "Mar",
+    "apr": "Apr",
+    "may": "May",
+    "jun": "Jun",
+    "jul": "Jul",
+    "aug": "Aug",
+    "sep": "Sep",
+    "oct": "Oct",
+    "nov": "Nov",
+    "dec": "Dec"
+  },
+  "notFound": {
+    "heading": "Page not found",
+    "description": "The page you're looking for doesn't exist.",
+    "homeLink": "Back to wiki-renderer"
+  },
+  "unavailableView": {
+    "heading": "This page is unavailable",
+    "description": "It doesn't exist, or you don't have access to it.",
+    "backLink": "Back to your wikis"
+  },
+  "emptyWiki": {
+    "heading": "This wiki has no pages yet",
+    "description": "Pages appear here as soon as they are added to the wiki."
+  },
+  "readerShell": {
+    "allWikis": "All wikis",
+    "navLabel": "Wiki pages",
+    "brandProduct": "Wikis",
+    "closeNavigation": "Close navigation"
+  },
+  "pdf": {
+    "button": "Save as PDF",
+    "preparing": "Preparing diagrams...",
+    "chromeHint": "For the best PDF, use Chrome."
+  },
+  "source": {
+    "viewSource": "View source",
+    "viewPage": "View page",
+    "copy": "Copy",
+    "copyLabel": "Copy Markdown source",
+    "copied": "Copied",
+    "download": "Download .md"
+  },
+  "theme": {
+    "label": "Theme",
+    "buttonLabel": "Theme: {value}",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "localeSwitcher": {
+    "label": "Language",
+    "en": "English"
+  },
+  "search": {
+    "trigger": "Search",
+    "triggerLabel": "Search this wiki",
+    "dialogTitle": "Search this wiki",
+    "inputLabel": "Search this wiki",
+    "inputPlaceholder": "Search pages and headings",
+    "idle": "Type to search this wiki.",
+    "loading": "Loading search…",
+    "failed": "Search is unavailable. Reload the page to try again, or browse the pages in the sidebar.",
+    "empty": "No pages match “{query}”",
+    "emptyText": "Search looks at page titles, headings and text. Try fewer or different words, or browse the pages in the sidebar.",
+    "shortcutApple": "⌘K",
+    "shortcutOther": "Ctrl K",
+    "listLabel": "Search results",
+    "resultCountOne": "1 result",
+    "resultCountOther": "{count} results",
+    "close": "Close search"
+  },
+  "onThisPage": {
+    "title": "On this page"
+  },
+  "headingAnchor": {
+    "label": "Copy link to \"{heading}\"",
+    "copied": "Link copied",
+    "failed": "Couldn't copy the link"
+  },
+  "pageMeta": {
+    "updated": "Updated",
+    "created": "Created",
+    "tags": "Tags"
+  },
+  "allProperties": {
+    "title": "All properties",
+    "empty": "empty"
+  },
+  "pageRail": {
+    "label": "Page details"
+  },
+  "staleNotice": {
+    "message": "Content may be out of date, last updated {time} UTC."
+  },
+  "errorPage": {
+    "heading": "Something went wrong",
+    "description": "This page couldn't be shown. Try again, or go back to your wikis."
+  },
+  "retryView": {
+    "heading": "Temporarily unavailable",
+    "description": "We can't reach this wiki's source right now. Try again in a moment.",
+    "action": "Try again"
+  },
+  "documentTitle": {
+    "suffix": "ESG Wikis"
+  },
+  "mermaid": {
+    "caption": "Diagram source (drawing needs JavaScript)",
+    "drawError": "This diagram could not be drawn.",
+    "diagramName": "Diagram"
+  },
+  "wikilinks": {
+    "unavailableLabel": "unavailable link",
+    "unavailableTooltip": "This link has no target in this wiki.",
+    "embedCycle": "This note is already shown above, so it is not embedded again.",
+    "embedDepth": "Embedding stops here: too many levels.",
+    "embedBudget": "Embedding stops here: this page embeds too many notes.",
+    "externalNewTab": "(opens in a new tab)",
+    "imageUnavailable": "Image unavailable"
+  },
+  "callouts": {
+    "titles": {
+      "note": "Note",
+      "info": "Info",
+      "tip": "Tip",
+      "warning": "Warning",
+      "danger": "Danger",
+      "success": "Success",
+      "important": "Important"
+    }
+  }
+}

@@ -1,0 +1,998 @@
+/*
+ * The reader's content stylesheet (US-189, ADR-019 amendment 2026-10-02). `.wr-prose` is on the reader's `<main>`; it replaces
+ * Tailwind Typography's `prose`. Ported from the reader mockup's section 3 (esg-design-system/wiki-renderer/page.css) onto the
+ * app's token names (shadcn theme variables, defined in the installed esg-theme.css; the ESG names are noted beside each use). Colours are tokens
+ * only (US-173 colour guard). Imported by globals.css and unlayered, so it beats the Tailwind base and utilities layers.
+ *
+ * Mermaid theming (US-192) is the section below the note embeds.
+ *
+ * Icons are files under /public/icons, drawn as masks: `--wr-icon-*` hold `url(...)` to the app's own origin, never a
+ * `data:` URL (the CSP is unchanged, and wr-prose.test.ts pins it). Mapping from the mockup: ink = foreground, ink-secondary =
+ * muted-foreground, surface = background, surface-muted = muted, focus-ring = ring, space-N = N px.
+ */
+:root {
+    --wr-icon-chevron-right: url("/icons/chevron-right.svg");
+    --wr-icon-tick: url("/icons/tick.svg");
+    --wr-icon-hash: url("/icons/hash.svg");
+    --wr-icon-external: url("/icons/external-link.svg");
+    --wr-icon-link-off: url("/icons/link-off.svg");
+    --wr-icon-callout-note: url("/icons/callout-note.svg");
+    --wr-icon-callout-info: url("/icons/callout-info.svg");
+    --wr-icon-callout-tip: url("/icons/callout-tip.svg");
+    --wr-icon-callout-success: url("/icons/callout-success.svg");
+    --wr-icon-callout-important: url("/icons/callout-important.svg");
+    --wr-icon-callout-warning: url("/icons/callout-warning.svg");
+    --wr-icon-callout-danger: url("/icons/callout-danger.svg");
+    --wr-icon-callout-default: url("/icons/callout-default.svg");
+    /* The "important" callout's violet ground: the mockup's alias of the selection surface (page.css, not in tokens.json). */
+    --accent-surface: var(--surface-selected);
+    /* Diagrams (Mermaid), US-192. All aliases of tokens, so a drawn diagram follows the theme with no redraw. The first seven are the
+       reader mockup's (page.css); the rest are the same idea for the other diagram types. Pairs are pinned by wr-prose-diagram-contrast.test.ts. */
+    --diagram-node: var(--surface-selected);
+    --diagram-node-border: var(--primary-text);
+    --diagram-ink: var(--foreground);
+    --diagram-line: var(--muted-foreground);
+    --diagram-label-surface: var(--background);
+    --diagram-group: var(--muted);
+    --diagram-group-border: var(--border-strong);
+    --diagram-on-line: var(--background); /* a sequence number sits on a disc in the line colour */
+    --diagram-grid: var(--border-strong); /* gantt grid lines */
+    --diagram-task: var(--info-surface);
+    --diagram-task-border: var(--info);
+    --diagram-crit: var(--danger-surface);
+    --diagram-crit-border: var(--danger);
+    /* Pie slices and their legend swatches, cycling. Mid-tones that hold the ink at 4.5:1 in both themes. */
+    --diagram-series-1: var(--chart-fill-1);
+    --diagram-series-2: var(--success-border);
+    --diagram-series-3: var(--warning-border);
+    --diagram-series-4: var(--info-border);
+    --diagram-series-5: var(--danger-border);
+}
+
+.wr-prose {
+    max-width: var(--measure); /* reading measure, from the theme (36em, about 70 characters of body text) */
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 24px; /* body */
+    color: var(--foreground);
+    overflow-wrap: break-word;
+}
+.wr-prose > :first-child {
+    margin-top: 0;
+}
+.wr-prose > :last-child {
+    margin-bottom: 0;
+}
+
+/* ---- Block rhythm: one 16px step between blocks ---- */
+.wr-prose :where(p, ul, ol, dl, blockquote, pre, table, hr, details, .callout, .note-embed, .embed-marker, [data-mermaid-id], section.footnotes) {
+    margin: 0 0 16px;
+}
+
+/* ---- Headings. h1 is the page title. Ids are user-content-<slug>, so a #fragment link lands below the sticky topbar through the page's one `scroll-padding-top` on `html` (esg-theme.css, US-212); no scroll-margin here. ---- */
+.wr-prose :where(h1, h2, h3, h4, h5, h6) {
+    color: var(--foreground);
+    font-weight: 700;
+    margin: 0;
+}
+.wr-prose h1 {
+    font-size: 28px;
+    line-height: 36px;
+    margin: 0 0 24px; /* heading-m */
+}
+.wr-prose h2 {
+    font-size: 24px;
+    line-height: 32px;
+    margin: 40px 0 12px; /* heading-s */
+}
+.wr-prose h3 {
+    font-size: 20px;
+    line-height: 24px;
+    margin: 32px 0 8px; /* title */
+}
+.wr-prose h4 {
+    font-size: 16px;
+    line-height: 24px;
+    margin: 24px 0 8px; /* body-strong */
+}
+.wr-prose h5 {
+    font-size: 14px;
+    line-height: 20px;
+    margin: 24px 0 8px; /* small, bold */
+}
+.wr-prose h6 {
+    font-size: 12px;
+    line-height: 16px;
+    margin: 24px 0 8px;
+    text-transform: uppercase;
+    color: var(--muted-foreground); /* eyebrow, in ink-secondary */
+}
+.wr-prose :where(h1, h2, h3, h4, h5, h6) + :where(h2, h3, h4, h5, h6) {
+    margin-top: 16px;
+}
+/* A kit EmptyState (the empty-wiki view, US-195) sits in this column but is not prose: its own gap sets the spacing, so the h1 and p margins above do not apply. */
+.wr-prose [data-slot="empty-state"] :is(h1, p) {
+    margin: 0;
+}
+/* ...nor does `.wr-prose h1`'s 28/36 (this file is unlayered, so it beats the kit title's `text-xl leading-6`): the title keeps the kit's `title` 20/24 (US-221). */
+.wr-prose [data-slot="empty-state"] h1 {
+    font-size: var(--text-title);
+    line-height: var(--text-title--line-height);
+}
+
+/* ---- Inline text ---- */
+.wr-prose :where(strong, b) {
+    font-weight: 700;
+}
+.wr-prose :where(del, s, strike) {
+    text-decoration: line-through;
+    color: var(--muted-foreground);
+}
+.wr-prose ins {
+    text-decoration: underline;
+    text-decoration-color: var(--success);
+    text-underline-offset: 2px;
+}
+.wr-prose :where(sub, sup) {
+    font-size: 12px;
+    line-height: 0; /* label */
+}
+.wr-prose abbr[title] {
+    text-decoration: underline dotted;
+    cursor: help;
+}
+.wr-prose q {
+    quotes: "\201C" "\201D" "\2018" "\2019";
+}
+.wr-prose kbd {
+    display: inline-block;
+    padding: 0 3px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 20px; /* caption */
+    color: var(--foreground);
+    background: var(--muted);
+    border: 1px solid var(--border-strong);
+    border-bottom-width: var(--border-divider);
+    border-radius: var(--ds-radius-sm);
+}
+.wr-prose :where(samp, var, tt) {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+}
+
+/* ---- Links. Every resolved link is underlined in the link colour; the focus ring is the solid outline. ---- */
+.wr-prose a {
+    color: var(--primary-text);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    border-radius: var(--ds-radius-sm);
+}
+.wr-prose a:hover {
+    text-decoration-thickness: 2px;
+}
+.wr-prose a:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    text-decoration: none;
+}
+
+/* External link: an icon (a file from the app's origin, drawn as a mask) on an empty aria-hidden span; the hidden
+   "(opens in a new tab)" text is `.external-link-text` in globals.css. */
+.wr-prose .external-link-icon,
+.wr-prose .wikilink-unavailable-indicator,
+.wr-properties .wikilink-unavailable-indicator {
+    display: inline-block;
+    width: 0.875em;
+    height: 0.875em;
+    margin-inline-start: 2px;
+    vertical-align: -0.0625em;
+}
+.wr-prose .external-link-icon {
+    background-color: currentColor;
+    -webkit-mask: var(--wr-icon-external) center / contain no-repeat;
+    mask: var(--wr-icon-external) center / contain no-repeat;
+}
+
+/* An unavailable link is not a link: muted, a dotted underline, the link-off icon, hover text (title), and the hidden
+   "unavailable link" text for assistive technology. The Properties panel reuses the same marker (US-188). */
+.wr-prose .wikilink-unavailable,
+.wr-properties .wikilink-unavailable {
+    color: var(--muted-foreground);
+    text-decoration: underline dotted;
+    text-decoration-color: var(--ink-muted);
+    text-underline-offset: 3px;
+    cursor: help;
+}
+.wr-prose .wikilink-unavailable-indicator,
+.wr-properties .wikilink-unavailable-indicator {
+    background-color: var(--muted-foreground);
+    -webkit-mask: var(--wr-icon-link-off) center / contain no-repeat;
+    mask: var(--wr-icon-link-off) center / contain no-repeat;
+}
+
+/* The footnote heading is visually hidden; Tailwind's `sr-only` utility is not generated for classes that come from content. */
+.wr-prose .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ---- Inline code (a block's code is below) ---- */
+.wr-prose :not(pre) > code {
+    padding: 0 3px;
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    color: var(--code-ink);
+    background: var(--code-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-sm);
+    overflow-wrap: anywhere;
+}
+.wr-prose a > code {
+    color: inherit;
+}
+
+/* ---- Lists ---- */
+.wr-prose :where(ul, ol) {
+    padding-left: 24px;
+}
+.wr-prose li {
+    margin: 0;
+}
+.wr-prose li + li {
+    margin-top: 4px;
+}
+.wr-prose li > :where(ul, ol) {
+    margin: 4px 0 0;
+}
+.wr-prose li > p {
+    margin: 0 0 8px;
+}
+.wr-prose li > p:last-child {
+    margin-bottom: 0;
+}
+.wr-prose ul {
+    list-style: disc;
+}
+.wr-prose ul ul {
+    list-style: circle;
+}
+.wr-prose ul ul ul {
+    list-style: square;
+}
+.wr-prose ol {
+    list-style: decimal;
+}
+.wr-prose ol ol {
+    list-style: lower-alpha;
+}
+.wr-prose ol ol ol {
+    list-style: lower-roman;
+}
+.wr-prose li::marker {
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Task lists: ul.contains-task-list > li.task-list-item > input[type=checkbox][disabled]. Read-only, so it keeps full
+   strength (not the disabled look) and uses the system's green checkbox. The installed esg-theme.css native-control rules
+   have no `.wr-prose` exclusion, so the two rules below undo the ones that would show here: the disabled dimming and the
+   theme's own checked tick (this file draws its own with ::before). */
+.wr-prose .task-list-item > input[type="checkbox"]:disabled {
+    opacity: 1;
+}
+.wr-prose .task-list-item > input[type="checkbox"]:checked::after {
+    content: none;
+}
+.wr-prose .contains-task-list {
+    list-style: none;
+    padding-left: 0;
+}
+.wr-prose .contains-task-list .contains-task-list {
+    padding-left: calc(var(--checkbox-size) + 8px);
+}
+.wr-prose .task-list-item > input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    position: relative;
+    display: inline-block;
+    width: var(--checkbox-size);
+    height: var(--checkbox-size);
+    margin: 0 8px 0 0;
+    vertical-align: -3px;
+    background: var(--background);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--ds-radius-sm);
+    cursor: default;
+}
+.wr-prose .task-list-item > input[type="checkbox"]:checked {
+    background: var(--checkbox-fill);
+    border-color: var(--checkbox-fill);
+}
+.wr-prose .task-list-item > input[type="checkbox"]:checked::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    background: var(--checkbox-mark);
+    -webkit-mask: var(--wr-icon-tick) center / contain no-repeat;
+    mask: var(--wr-icon-tick) center / contain no-repeat;
+}
+.wr-prose .task-list-item > p:first-child {
+    display: inline;
+}
+
+/* ---- Description lists (raw HTML <dl>) ---- */
+.wr-prose dt {
+    font-weight: 700;
+}
+.wr-prose dd {
+    margin: 0 0 8px 24px;
+}
+
+/* ---- Blockquote (a plain one; a [!type] first line makes it a callout instead) ---- */
+.wr-prose blockquote {
+    padding: 0 0 0 16px;
+    color: var(--muted-foreground);
+    border-left: var(--accent-bar-thickness) solid var(--border-strong);
+}
+.wr-prose blockquote > :last-child {
+    margin-bottom: 0;
+}
+
+/* ---- Rule ---- */
+.wr-prose hr {
+    height: 0;
+    margin: 32px 0;
+    border: 0;
+    border-top: var(--border-divider) solid var(--border);
+}
+
+/* ---- Images: ![](rel), ![[img|300]] (width/height attributes) and absolute http(s) images ---- */
+.wr-prose img {
+    max-width: 100%;
+    height: auto;
+    vertical-align: middle;
+    border-radius: var(--ds-radius-md);
+}
+
+/* ---- Tables. The pipeline emits a bare <table> carrying tabindex="0" (rehypeFocusableTables, TC-503), so the table itself
+   is the scroll box: as wide as its content up to the column, then it scrolls sideways, and a keyboard can focus it. ---- */
+.wr-prose table {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+    line-height: 20px; /* small */
+    font-variant-numeric: tabular-nums;
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-md);
+}
+.wr-prose :where(th, td) {
+    min-width: 96px;
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border);
+}
+.wr-prose :where(th, td) + :where(th, td) {
+    border-left: 1px solid var(--border);
+}
+.wr-prose thead th {
+    font-weight: 700;
+    color: var(--foreground);
+    background: var(--muted);
+}
+.wr-prose tbody tr:last-child > * {
+    border-bottom: 0;
+}
+.wr-prose [align="center"] {
+    text-align: center;
+}
+.wr-prose [align="right"] {
+    text-align: right;
+}
+.wr-prose table:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+/* ---- Shiki's css-variables theme (US-190, ADR-010 amendment 2026-10-05). The server writes `color:var(--shiki-token-*)` (or
+   `--shiki-foreground` for an unscoped token) on each token span, and these are the variables, set from the ESG tokens. They
+   are references to theme-aware tokens, so they follow the theme the reader chose: esg-theme.css redefines those tokens under
+   `:root[data-theme="dark"]` and under `:root:not([data-theme])` with a dark system, and print stays light because the dark
+   sets are screen-only. Code ground is `--code-surface` (surface-muted). There is no `--shiki-background`: `pre` carries no
+   style. The tokens without a `--code-*` alias reuse existing tokens (operator 2026-10-05). ---- */
+.wr-prose {
+    --shiki-foreground: var(--code-ink); /* ink */
+    --shiki-token-keyword: var(--code-keyword); /* primary-text */
+    --shiki-token-function: var(--code-function);
+    --shiki-token-string: var(--code-string); /* success */
+    --shiki-token-string-expression: var(--code-string);
+    --shiki-token-inserted: var(--code-inserted); /* success */
+    --shiki-token-constant: var(--code-constant); /* warning */
+    --shiki-token-changed: var(--code-constant);
+    --shiki-token-comment: var(--code-comment); /* ink-muted */
+    --shiki-token-punctuation: var(--code-punctuation); /* ink-secondary */
+    --shiki-token-parameter: var(--code-ink);
+    --shiki-token-link: var(--primary-text);
+    --shiki-token-deleted: var(--code-deleted); /* danger */
+}
+/* The theme sets no font style (fontStyle: false), so comments are italic from here. */
+.wr-prose .shiki span[style*="--shiki-token-comment"] {
+    font-style: italic;
+}
+
+/* ---- Code blocks: the block shape. Highlighted (pre.shiki[tabindex=0] > code > span.line) and plain (pre > code) look
+   the same apart from the token colours. Nothing else sets a colour on `pre.shiki`, so these rules need no order pin. ---- */
+.wr-prose pre {
+    position: relative;
+    padding: 16px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 20px; /* small */
+    color: var(--code-ink);
+    background: var(--code-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-md);
+    tab-size: 2;
+    -webkit-text-size-adjust: none;
+}
+.wr-prose pre code {
+    display: block;
+    width: max-content;
+    min-width: 100%;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    white-space: pre;
+}
+.wr-prose pre:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+.wr-prose pre.shiki .line {
+    display: inline;
+}
+/* ---- Callouts (US-191). A blockquote whose first line is [!type] becomes
+   div.callout.callout-<type>[role=note|alert] > div.callout-title > span.callout-icon[aria-hidden] + title, then the body.
+   Types the pipeline knows: note, info, tip, warning, danger, success, important; any other word is callout-default with the
+   author's word as the title. Fold markers (+/-) are consumed and the callout is always open. Each type keeps its own icon and
+   title word, so colour never carries the meaning alone.
+     note, info -> info family; tip, success -> success family; warning -> warning family; danger -> danger family (role="alert");
+     important -> accent family (accent-surface + accent-border + primary-text); default -> neutral (muted + border-strong). ---- */
+.wr-prose .callout {
+    --callout-ink: var(--muted-foreground);
+    --callout-surface: var(--muted);
+    --callout-border: var(--border-strong);
+    --callout-icon: var(--wr-icon-callout-default);
+    padding: 12px 16px;
+    color: var(--foreground);
+    background: var(--callout-surface);
+    border: 1px solid var(--callout-border);
+    border-radius: var(--ds-radius-md);
+    break-inside: avoid;
+}
+.wr-prose .callout-note {
+    --callout-ink: var(--info);
+    --callout-surface: var(--info-surface);
+    --callout-border: var(--info-border);
+    --callout-icon: var(--wr-icon-callout-note);
+}
+.wr-prose .callout-info {
+    --callout-ink: var(--info);
+    --callout-surface: var(--info-surface);
+    --callout-border: var(--info-border);
+    --callout-icon: var(--wr-icon-callout-info);
+}
+.wr-prose .callout-tip {
+    --callout-ink: var(--success);
+    --callout-surface: var(--success-surface);
+    --callout-border: var(--success-border);
+    --callout-icon: var(--wr-icon-callout-tip);
+}
+.wr-prose .callout-success {
+    --callout-ink: var(--success);
+    --callout-surface: var(--success-surface);
+    --callout-border: var(--success-border);
+    --callout-icon: var(--wr-icon-callout-success);
+}
+.wr-prose .callout-warning {
+    --callout-ink: var(--warning);
+    --callout-surface: var(--warning-surface);
+    --callout-border: var(--warning-border);
+    --callout-icon: var(--wr-icon-callout-warning);
+}
+.wr-prose .callout-danger {
+    --callout-ink: var(--danger);
+    --callout-surface: var(--danger-surface);
+    --callout-border: var(--danger-border);
+    --callout-icon: var(--wr-icon-callout-danger);
+}
+.wr-prose .callout-important {
+    --callout-ink: var(--primary-text);
+    --callout-surface: var(--accent-surface);
+    --callout-border: var(--accent-border);
+    --callout-icon: var(--wr-icon-callout-important);
+}
+.wr-prose .callout-title {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--foreground);
+}
+.wr-prose .callout-title + * {
+    margin-top: 8px;
+}
+.wr-prose .callout-icon {
+    flex: none;
+    width: var(--icon-control);
+    height: var(--icon-control);
+    margin-top: 2px;
+    background-color: var(--callout-ink);
+    -webkit-mask: var(--callout-icon) center / contain no-repeat;
+    mask: var(--callout-icon) center / contain no-repeat;
+}
+.wr-prose .callout > :last-child {
+    margin-bottom: 0;
+}
+/* A block inside a callout sits on the page colour, so it reads against the callout's own surface. */
+.wr-prose .callout :where(pre, table, .callout, .note-embed) {
+    background-color: var(--background);
+}
+.wr-prose .callout pre.shiki {
+    background-color: var(--background);
+}
+
+/* ---- Note embeds. ![[Note]] expands to div.note-embed holding the note's body only (no title, no frontmatter): a framed
+   panel, so embedded text is never mistaken for the host page's own. Not a callout and not a quote. ---- */
+.wr-prose .note-embed {
+    padding: 16px;
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-md);
+}
+.wr-prose .note-embed > :last-child {
+    margin-bottom: 0;
+}
+.wr-prose .note-embed :where(h1, h2) {
+    font-size: 20px;
+    line-height: 24px;
+    margin-top: 16px; /* a note's own headings stay below the host's */
+}
+.wr-prose .note-embed > :first-child {
+    margin-top: 0;
+}
+/* An embed that stops (cycle, depth, budget): div.embed-marker with the accepted sentence and nothing else. */
+.wr-prose .embed-marker {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--muted-foreground);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--ds-radius-md);
+}
+.wr-prose .embed-marker::before {
+    content: "";
+    flex: none;
+    width: var(--icon-ui);
+    height: var(--icon-ui);
+    margin-top: 2px;
+    background-color: currentColor;
+    -webkit-mask: var(--wr-icon-callout-info) center / contain no-repeat;
+    mask: var(--wr-icon-callout-info) center / contain no-repeat;
+}
+
+/* ---- Mermaid (US-192, FR-027, ADR-011). The server emits div[data-mermaid-id][data-mermaid-source] > p[data-mermaid-caption] +
+   pre > code (readable with no script). The client replaces it with the drawn <svg> (data-mermaid-state="drawn"), or puts
+   p[data-mermaid-error] in place of the caption ("error"); "drawing" is the state while Mermaid works. The frame is the same in
+   every state. ---- */
+.wr-prose [data-mermaid-id] {
+    padding: 16px;
+    overflow-x: auto;
+    background: var(--background); /* surface */
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-md);
+}
+.wr-prose [data-mermaid-id] > svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+}
+.wr-prose [data-mermaid-id] > pre {
+    margin: 0;
+}
+.wr-prose :where([data-mermaid-caption], [data-mermaid-error]) {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 12px;
+    font-size: 13px;
+    line-height: 20px; /* caption */
+    color: var(--muted-foreground);
+}
+.wr-prose [data-mermaid-error] {
+    color: var(--danger);
+}
+.wr-prose [data-mermaid-error]::before {
+    content: "";
+    flex: none;
+    width: var(--icon-ui);
+    height: var(--icon-ui);
+    margin-top: 2px;
+    background-color: currentColor;
+    -webkit-mask: var(--wr-icon-callout-danger) center / contain no-repeat;
+    mask: var(--wr-icon-callout-danger) center / contain no-repeat;
+}
+.wr-prose [data-mermaid-state="drawing"] {
+    opacity: var(--opacity-disabled);
+}
+
+/* The drawn SVG's colours. Mermaid keeps its default theme (no `theme` key, so a theme switch never redraws) and embeds a
+   <style> scoped to the svg's id (`#m-1 .node rect {...}`), which beats any class selector here. Two things win it:
+   `!important` on every colour declaration (it also beats an inline `style`, such as a pie legend swatch's fill), and the
+   `:not(#_)` on the svg, which gives each selector the specificity of an id (Mermaid's own `!important` rules, such as the gantt
+   task text, the class and ER markers and the flowchart anchor, are only beaten that way). In return a drawn diagram follows a
+   theme switch through the `--diagram-*` aliases with no redraw. The selectors are Mermaid 12.0.0's output, measured per diagram
+   type; a Mermaid bump re-runs the TC-504 walk.
+   Where Mermaid paints a pastel fill (actor boxes, gantt bars, pie slices) the fill is themed as well as the text, so the text
+   keeps 4.5:1 on its own fill and every line or outline 3:1 against what it sits on (token pairs: wr-prose-diagram-contrast.test.ts).
+   The flowchart follows the reader mockup (page.css); the other types are readable and token-coloured, not branded. */
+.wr-prose [data-mermaid-id] svg:not(#_) {
+    font-family: var(--font-sans) !important;
+}
+/* Mermaid sizes each label with its own font; the reader's font is a pixel or two wider, so a label may overrun its box and must not be clipped. */
+.wr-prose [data-mermaid-id] svg:not(#_) foreignObject {
+    overflow: visible;
+}
+/* Text: SVG text, HTML labels in foreignObject, every kind of label. */
+.wr-prose [data-mermaid-id] svg:not(#_) :is(text, tspan) {
+    fill: var(--diagram-ink) !important;
+    stroke: none !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) :is(foreignObject, foreignObject *, .label, .nodeLabel, .cluster-label, .edgeLabel, .edgeLabel p) {
+    color: var(--diagram-ink) !important;
+}
+/* Edge labels sit on the page ground, not on Mermaid's grey box. */
+.wr-prose [data-mermaid-id] svg:not(#_) :is(.edgeLabel rect, .labelBkg rect) {
+    fill: var(--diagram-label-surface) !important;
+    opacity: 1 !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) :is(span.edgeLabel, div.labelBkg, .labelBkg p, .edgeLabel p, p.edgeLabel) {
+    background-color: var(--diagram-label-surface) !important;
+}
+/* Nodes: flowchart, class, state, ER. */
+.wr-prose [data-mermaid-id] svg:not(#_) :is(.node rect, .node circle, .node ellipse, .node polygon, .node path) {
+    fill: var(--diagram-node) !important;
+    stroke: var(--diagram-node-border) !important;
+    stroke-width: 1px !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) :is(.cluster rect, .statediagram-cluster rect, .statediagram-note path, .statediagram-note rect) {
+    fill: var(--diagram-group) !important;
+    stroke: var(--diagram-group-border) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) :is(.row-rect-odd path, .row-rect-odd rect) {
+    fill: var(--diagram-label-surface) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) :is(.row-rect-even path, .row-rect-even rect) {
+    fill: var(--diagram-group) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) :is(.divider path, .divider line, .divider rect, .classDivider, .attributeBoxOdd, .attributeBoxEven) {
+    stroke: var(--diagram-group-border) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) :is(circle.state-start, circle.state-end, .end-state-inner, .end-state-outer, .fork-join rect) {
+    fill: var(--diagram-line) !important;
+    stroke: var(--diagram-line) !important;
+}
+/* Lines: edges, relations, transitions, and their arrowheads. */
+.wr-prose [data-mermaid-id] svg:not(#_) :is(.flowchart-link, .edgePath .path, .relation, .relationshipLine, .transition, .note-edge, path.edge-thickness-normal, .dashed-line, .dotted-line) {
+    stroke: var(--diagram-line) !important;
+    stroke-width: 1.5px !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) marker :is(path, polygon, circle) {
+    fill: var(--diagram-line) !important;
+    stroke: var(--diagram-line) !important;
+}
+/* Hollow heads keep meaning (class aggregation, extension and lollipop; ER "zero or"): they fill with the ground, not the line. */
+.wr-prose [data-mermaid-id] svg:not(#_) marker:is([id*="-aggregation"], [id*="-extension"], [id*="-lollipop"], [id*="-zeroOrOne"], [id*="-zeroOrMore"]) :is(path, polygon, circle) {
+    fill: var(--diagram-label-surface) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) marker:is([id*="-onlyOne"], [id*="-oneOrMore"], [id*="-stick"]) path {
+    fill: none !important;
+}
+/* Sequence. */
+.wr-prose [data-mermaid-id] svg:not(#_) :is(rect.actor, .actor-man circle, .actor-man rect) {
+    fill: var(--diagram-node) !important;
+    stroke: var(--diagram-node-border) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) :is(line.actor-line, .actor-man line, .messageLine0, .messageLine1, .loopLine, .activation-line) {
+    stroke: var(--diagram-line) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) :is(polygon.labelBox, rect.note, rect.rect, .activation0, .activation1, .activation2) {
+    fill: var(--diagram-group) !important;
+    stroke: var(--diagram-group-border) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) :is(text.sequenceNumber, .sequenceNumber) {
+    fill: var(--diagram-on-line) !important; /* the number sits on a line-coloured disc */
+}
+/* Gantt. */
+.wr-prose [data-mermaid-id] svg:not(#_) .grid .tick {
+    stroke: var(--diagram-grid) !important;
+    opacity: 1 !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) .grid .tick text {
+    stroke: none !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) .grid path.domain {
+    stroke: var(--diagram-line) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) :is(rect.section0, rect.section2) {
+    fill: var(--diagram-group) !important;
+    opacity: 0.6 !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) :is(rect.section1, rect.section3) {
+    fill: none !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) rect.task {
+    fill: var(--diagram-task) !important;
+    stroke: var(--diagram-task-border) !important;
+    stroke-width: 1.5px !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) rect.task[class*="done"] {
+    fill: var(--diagram-group) !important;
+    stroke: var(--diagram-line) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) rect.task[class*="active"] {
+    fill: var(--diagram-node) !important;
+    stroke: var(--diagram-node-border) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) rect.task[class*="crit"] {
+    fill: var(--diagram-crit) !important;
+    stroke: var(--diagram-crit-border) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) :is(.today, .today line, line.today, .vert) {
+    stroke: var(--diagram-crit-border) !important;
+}
+/* Pie: five series that cycle, each slice outlined in the ink (3:1 against every series fill and the ground) with the ink on it; the legend swatch wears the same fill. */
+.wr-prose [data-mermaid-id] svg:not(#_) circle.pieOuterCircle {
+    fill: none !important;
+    stroke: var(--diagram-line) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) path.pieCircle {
+    stroke: var(--diagram-ink) !important;
+    stroke-width: 1px !important;
+    opacity: 1 !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) .legend rect {
+    stroke: var(--diagram-ink) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) path.pieCircle:nth-of-type(5n + 1),
+.wr-prose [data-mermaid-id] svg:not(#_) g.legend:nth-of-type(5n + 2) rect {
+    fill: var(--diagram-series-1) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) path.pieCircle:nth-of-type(5n + 2),
+.wr-prose [data-mermaid-id] svg:not(#_) g.legend:nth-of-type(5n + 3) rect {
+    fill: var(--diagram-series-2) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) path.pieCircle:nth-of-type(5n + 3),
+.wr-prose [data-mermaid-id] svg:not(#_) g.legend:nth-of-type(5n + 4) rect {
+    fill: var(--diagram-series-3) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) path.pieCircle:nth-of-type(5n + 4),
+.wr-prose [data-mermaid-id] svg:not(#_) g.legend:nth-of-type(5n + 5) rect {
+    fill: var(--diagram-series-4) !important;
+}
+.wr-prose [data-mermaid-id] svg:not(#_) path.pieCircle:nth-of-type(5n + 5),
+.wr-prose [data-mermaid-id] svg:not(#_) g.legend:nth-of-type(5n + 6) rect {
+    fill: var(--diagram-series-5) !important;
+}
+
+/* ---- Details (raw HTML <details>/<summary>; opens with no script) ---- */
+.wr-prose details {
+    padding: 0 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-md);
+}
+.wr-prose summary {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 0;
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+    border-radius: var(--ds-radius-sm);
+}
+.wr-prose summary::-webkit-details-marker {
+    display: none;
+}
+.wr-prose summary::before {
+    content: "";
+    flex: none;
+    width: var(--icon-ui);
+    height: var(--icon-ui);
+    margin-top: 4px;
+    background-color: var(--muted-foreground);
+    -webkit-mask: var(--wr-icon-chevron-right) center / contain no-repeat;
+    mask: var(--wr-icon-chevron-right) center / contain no-repeat;
+    transition: transform var(--duration-fast) var(--ease-standard);
+}
+.wr-prose details[open] > summary::before {
+    transform: rotate(90deg);
+}
+.wr-prose summary:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+.wr-prose details > :last-child:not(summary) {
+    margin-bottom: 16px;
+}
+@media (prefers-reduced-motion: reduce) {
+    .wr-prose summary::before {
+        transition: none;
+    }
+}
+
+/* ---- Footnotes. Refs: sup > a[data-footnote-ref]. Notes: section.footnotes[data-footnotes] > h2.sr-only + ol > li,
+   each ending in a.data-footnote-backref. ---- */
+.wr-prose [data-footnote-ref] {
+    text-decoration: none;
+    padding: 0 2px;
+    font-weight: 700;
+}
+.wr-prose [data-footnote-ref]::before {
+    content: "[";
+}
+.wr-prose [data-footnote-ref]::after {
+    content: "]";
+}
+.wr-prose section.footnotes {
+    margin-top: 40px;
+    padding-top: 16px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--muted-foreground);
+    border-top: 1px solid var(--border); /* small */
+}
+.wr-prose section.footnotes ol {
+    padding-left: 24px;
+}
+.wr-prose section.footnotes li:target {
+    background: var(--surface-selected);
+    border-radius: var(--ds-radius-sm);
+}
+.wr-prose .data-footnote-backref {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    margin-inline-start: 4px;
+}
+
+/* ---- The source view (?view=source), rendered inside the same `<main>`: the file's text as React text in <pre><code>,
+   wrapped, ligatures off (section 2 of the mockup). Its `code` overrides the block rule above. ---- */
+.wr-source {
+    margin: 0;
+    padding: 16px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--code-ink);
+    background: var(--code-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-md);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
+    tab-size: 4;
+}
+.wr-source code,
+.wr-prose .wr-source code {
+    display: inline;
+    width: auto;
+    min-width: 0;
+    font: inherit;
+    white-space: pre-wrap;
+}
+.wr-source-title {
+    margin: 0 0 16px;
+}
+
+/* ---- Print (Save as PDF is the browser's print of this page; the tokens are forced light). Nothing is added: no URLs after
+   links, no header or footer. Long code wraps instead of being clipped, tables lose their scroll. ---- */
+@media print {
+    .wr-prose {
+        max-width: none;
+        font-size: 11pt;
+        line-height: 1.5;
+    }
+    .wr-prose h1 {
+        font-size: 20pt;
+        line-height: 1.25;
+    }
+    .wr-prose h2 {
+        font-size: 16pt;
+        line-height: 1.3;
+        margin-top: 18pt;
+    }
+    .wr-prose h3 {
+        font-size: 13pt;
+        line-height: 1.3;
+    }
+    .wr-prose :where(h1, h2, h3, h4, h5, h6) {
+        break-after: avoid;
+    }
+    .wr-prose :where(p, li) {
+        orphans: 3;
+        widows: 3;
+    }
+    .wr-prose a {
+        color: var(--foreground);
+    }
+    .wr-prose .external-link-icon {
+        display: none;
+    }
+    .wr-prose pre,
+    .wr-prose pre code {
+        white-space: pre-wrap;
+        overflow: visible;
+        width: auto;
+        overflow-wrap: anywhere;
+    }
+    .wr-prose pre {
+        font-size: 9pt;
+        line-height: 1.4;
+    }
+    .wr-prose table {
+        display: table;
+        width: 100%;
+        overflow: visible;
+        font-size: 9pt;
+    }
+    .wr-prose :where(th, td) {
+        min-width: 0;
+    }
+    .wr-prose :where(pre, table, img, details, [data-mermaid-id], .callout, .note-embed, .embed-marker) {
+        break-inside: avoid;
+    }
+    /* The mask icons are drawn as a background-colour through a mask, so they need the exact-colour pin to print with background
+       graphics off (BUG-039). The elements are listed, never their ::before: print-color-adjust is inherited. The Properties panel is
+       a sibling of the prose and holds only the unavailable-link indicator from this list. */
+    :where(.wr-prose, .wr-properties)
+        :where(.callout, .note-embed, .task-list-item > input, thead th, pre, .wikilink-unavailable-indicator, .embed-marker, [data-mermaid-error], summary) {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    /* A diagram that failed, or has not been drawn, prints its error or neutral caption line and never its raw fence source
+       (NFR-008 acceptance 2, TC-483). A drawn diagram has no `pre` left, so this only ever hides source. */
+    .wr-prose [data-mermaid-id] > pre {
+        display: none;
+    }
+    /* Current engines slot a closed details' body into ::details-content with content-visibility: hidden, which display: block on the
+       children no longer overrides (BUG-040). It is a slot, not generated content. */
+    .wr-prose details::details-content {
+        content-visibility: visible;
+    }
+    .wr-prose details > :not(summary) {
+        display: block; /* closed <details> print their content; the summary stays a flex row so its chevron keeps its box (BUG-040) */
+    }
+    .wr-prose img {
+        max-height: 60vh;
+    }
+}

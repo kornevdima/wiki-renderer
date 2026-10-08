@@ -1,0 +1,361 @@
+/*
+ * The reader's own layout and literal-text rules (US-218, SA-MOD Reader UI and print, E3-1). App-owned: the installed theme
+ * and shell (ADR-020) are never edited, so what the reader needs beyond them lives here. Unlayered, so it beats the Tailwind
+ * utilities by order of layer, not by specificity. Colours are tokens only (colour-guard.test.ts reads this file).
+ */
+
+/*
+ * One centred column for the stale notice, the page bar and the article, so the three share their left and right edges
+ * and the spare width splits evenly on both sides. It is a single grid item of the installed content slot; the slot is
+ * not edited. Every child carries min-width 0, so a long crumb or code line cannot stretch the page past the viewport.
+ */
+.wr-column {
+    box-sizing: border-box;
+    display: grid;
+    gap: var(--space-24);
+    width: 100%;
+    min-width: 0;
+    max-width: var(--measure);
+    justify-self: center;
+}
+.wr-column > * {
+    min-width: 0;
+}
+.wr-layout {
+    display: grid;
+    min-width: 0;
+    gap: var(--space-32);
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+}
+.wr-layout > * {
+    min-width: 0;
+}
+@media (min-width: 1200px) {
+    /* The right-hand column widens the column by its own width and gap, so the article stays at the measure. */
+    .wr-column:has(.wr-layout--aside) {
+        max-width: calc(var(--measure) + var(--space-60) + var(--sidebar-w));
+    }
+    .wr-layout--aside {
+        grid-template-columns: minmax(0, var(--measure)) var(--sidebar-w);
+        column-gap: var(--space-60);
+        /* The Properties column must be as tall as the article, or its sticky panel has no room to stick. */
+        align-items: stretch;
+    }
+}
+
+/*
+ * Literal text is Lilex with ligatures off everywhere (operator 2026-10-03, US-171). The installed theme turns them off for
+ * code, pre, kbd and samp; var, tt and the non-code literals (repository line, property keys and IDs) are added here.
+ */
+code,
+pre,
+kbd,
+samp,
+var,
+tt,
+.wr-literal {
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
+}
+.wr-literal {
+    font-family: var(--font-mono);
+}
+
+/*
+ * A matched word in a search result's title or heading (US-222): bold, with the browser's yellow highlight and its text colour
+ * taken away. The search dialog is a portal, so it sits outside .wr-prose.
+ */
+.wr-search__match {
+    background: none;
+    color: inherit;
+    font-weight: 700;
+}
+
+/*
+ * The page meta line (US-220, SA-MOD Reader UI and print E3-5): status, last update and tags in one wrapping row under the h1,
+ * inside <main>. The negative top margin takes back half of the h1's 24px bottom margin, so the line sits close to its title.
+ * Unlayered, so it beats the Tailwind utilities on the same elements; it is a div of spans, so no `.wr-prose p/ul/li` rule applies.
+ */
+.wr-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-8) var(--space-12);
+    min-width: 0;
+    margin: calc(var(--space-12) - var(--space-24)) 0 var(--space-24);
+}
+.wr-meta time {
+    font-variant-numeric: tabular-nums;
+}
+
+/*
+ * The page rail (E3-D5): one complementary landmark beside the article from 1200px, after it below. It is sticky below the
+ * topbar, taller than the viewport it scrolls inside itself, and `align-self: start` leaves the stretched grid area as the
+ * room it sticks within. US-220 puts All properties in it; US-219 adds the "On this page" list.
+ */
+.wr-rail {
+    display: grid;
+    gap: var(--space-24);
+    min-width: 0;
+}
+@media (min-width: 1200px) {
+    .wr-rail {
+        position: sticky;
+        top: calc(var(--topbar-h) + var(--space-24));
+        align-self: start;
+        max-height: calc(100vh - var(--topbar-h) - var(--space-48));
+        overflow: auto;
+    }
+}
+
+/*
+ * "On this page" (US-219, FR-053, SA-MOD Reader UI and print E3-2, E3-D5): the page's h2 and h3, nested, in two server-rendered copies
+ * of which CSS shows one. The rail copy sits in the page rail from 1200px; the folded copy is a native <details> under the meta line
+ * inside <main> below that. Selectors carry `.wr-layout` as the mockup does: the folded copy lives inside `.wr-prose`, whose
+ * unlayered `ul`, `li`, `a`, `details` and `summary` rules would otherwise restyle it. The current entry has the selection wash and
+ * bold as well as `aria-current="location"`, so colour is never the only cue. An aside that holds only the list shows nowhere
+ * below 1200px (its list is the hidden copy) and never prints.
+ */
+.wr-layout .wr-toc li,
+.wr-layout .wr-toc li + li {
+    margin: 0;
+}
+.wr-layout .wr-toc__title {
+    margin: 0 0 var(--space-8);
+    color: var(--foreground);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+}
+.wr-layout .wr-toc ul {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.wr-layout .wr-toc ul ul {
+    margin-top: 2px;
+    padding-left: var(--space-12);
+    list-style: none;
+}
+.wr-layout .wr-toc a {
+    display: block;
+    padding: calc(var(--space-8) / 2) var(--space-8);
+    border-radius: var(--ds-radius-sm);
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+.wr-layout .wr-toc a:hover {
+    background: var(--hover-overlay);
+    color: var(--foreground);
+    text-decoration: none;
+}
+.wr-layout .wr-toc a:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+    text-decoration: none;
+}
+.wr-layout .wr-toc a[aria-current="location"] {
+    background: var(--surface-selected);
+    color: var(--primary-text);
+    font-weight: 700;
+}
+.wr-layout .wr-toc--rail {
+    display: none;
+}
+.wr-layout .wr-toc--inline {
+    margin: 0 0 var(--space-24);
+    padding: 0 var(--space-16);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-md);
+}
+.wr-layout .wr-toc--inline > summary {
+    align-items: center;
+    min-height: var(--control-h-m);
+    padding: 0;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+}
+.wr-layout .wr-toc--inline > summary::before {
+    margin-top: 0;
+    background-color: var(--muted-foreground);
+}
+.wr-layout .wr-toc--inline > ul {
+    margin: 0 0 var(--space-12);
+}
+@media (min-width: 1200px) {
+    .wr-layout .wr-toc--rail {
+        display: block;
+    }
+    .wr-layout .wr-toc--inline {
+        display: none;
+    }
+}
+@media (max-width: 1199.98px) {
+    .wr-rail:not(:has(.wr-properties)) {
+        display: none;
+    }
+}
+
+/*
+ * Heading anchors (US-219, FR-053, SA-MOD Reader UI and print E3-3): the empty `a.heading-anchor` the pipeline appends to each h2 and
+ * h3. The icon is a mask on ::before (a file under /public/icons, never inline SVG). It shows on heading hover, on keyboard focus,
+ * and always on a device with no hover. `data-state` is set for two seconds by the copy island: a tick in the success colour, or a
+ * danger icon in the danger colour; the icon changes shape, so colour is never the only cue. Specificity (0,2,1) and up beats the
+ * article's `.wr-prose a` (underline, link colour, focus rules).
+ */
+.wr-prose a.heading-anchor {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--space-24);
+    height: var(--space-24);
+    margin-inline-start: calc(var(--space-8) / 2);
+    vertical-align: middle;
+    color: var(--muted-foreground);
+    text-decoration: none;
+    border-radius: var(--ds-radius-sm);
+    opacity: 0;
+    transition:
+        opacity var(--duration-fast) var(--ease-standard),
+        color var(--duration-fast) var(--ease-standard);
+}
+.wr-prose a.heading-anchor::before {
+    content: "";
+    width: var(--icon-ui);
+    height: var(--icon-ui);
+    background-color: currentColor;
+    -webkit-mask: var(--wr-icon-hash) center / contain no-repeat;
+    mask: var(--wr-icon-hash) center / contain no-repeat;
+}
+.wr-prose :where(h2, h3):hover > a.heading-anchor,
+.wr-prose a.heading-anchor:focus-visible,
+.wr-prose a.heading-anchor[data-state] {
+    opacity: 1;
+}
+.wr-prose a.heading-anchor:hover {
+    color: var(--foreground);
+    text-decoration: none;
+}
+.wr-prose a.heading-anchor:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    text-decoration: none;
+}
+.wr-prose a.heading-anchor[data-state="copied"] {
+    color: var(--success);
+}
+.wr-prose a.heading-anchor[data-state="copied"]::before {
+    -webkit-mask-image: var(--wr-icon-tick);
+    mask-image: var(--wr-icon-tick);
+}
+.wr-prose a.heading-anchor[data-state="failed"] {
+    color: var(--danger);
+}
+.wr-prose a.heading-anchor[data-state="failed"]::before {
+    -webkit-mask-image: var(--wr-icon-callout-danger);
+    mask-image: var(--wr-icon-callout-danger);
+}
+@media (hover: none) {
+    .wr-prose a.heading-anchor {
+        opacity: 1;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .wr-prose a.heading-anchor {
+        transition: none;
+    }
+}
+
+/*
+ * All properties (US-220): a closed native <details> holding every frontmatter key. Closed by default and never rendered `open`;
+ * the print block below opens it for print and PDF without script. The count sits at the right of the summary.
+ */
+.wr-properties {
+    padding: 0 var(--space-16);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-md);
+}
+.wr-properties > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    min-height: var(--control-h-m);
+    color: var(--foreground);
+    cursor: pointer;
+    list-style: none;
+    border-radius: var(--ds-radius-sm);
+}
+.wr-properties > summary::-webkit-details-marker {
+    display: none;
+}
+.wr-properties > summary::before {
+    content: "";
+    flex: none;
+    width: var(--icon-ui);
+    height: var(--icon-ui);
+    background-color: var(--muted-foreground);
+    -webkit-mask: var(--wr-icon-chevron-right) center / contain no-repeat;
+    mask: var(--wr-icon-chevron-right) center / contain no-repeat;
+    transition: transform var(--duration-fast) var(--ease-standard);
+}
+.wr-properties[open] > summary::before {
+    transform: rotate(90deg);
+}
+.wr-properties > summary:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+.wr-properties__count {
+    margin-left: auto;
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+}
+@media (prefers-reduced-motion: reduce) {
+    .wr-properties > summary::before {
+        transition: none;
+    }
+}
+
+@media print {
+    /* Neither the list, its folded copy nor the anchors print; an anchor with no icon and no text must not reserve space. An aside
+       that holds only the list is hidden whole, so no empty box is left (US-219). */
+    .wr-toc,
+    .wr-prose a.heading-anchor,
+    .wr-rail:not(:has(.wr-properties)) {
+        display: none !important;
+    }
+    .wr-column,
+    .wr-column:has(.wr-layout--aside) {
+        max-width: none;
+    }
+    .wr-layout--aside {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    /* The rail prints in the flow, and All properties prints open (R-4): a closed details slots its body into ::details-content
+       with content-visibility: hidden, which this undoes (BUG-040, the same mechanism as .wr-prose details). */
+    .wr-rail {
+        position: static;
+        max-height: none;
+        overflow: visible;
+    }
+    .wr-properties {
+        margin-top: var(--space-24);
+        break-inside: avoid;
+    }
+    .wr-properties > summary::before {
+        display: none;
+    }
+    .wr-properties::details-content {
+        content-visibility: visible;
+    }
+    .wr-properties > :not(summary) {
+        display: block;
+    }
+}
