@@ -132,6 +132,7 @@ function Avatar({
       )}
       {...props}
     >
+      {/* eslint-disable-next-line @next/next/no-img-element -- framework-agnostic registry: next/image is a Next-only API, and an avatar-sized photo the caller supplies needs no optimisation */}
       {src ? <img data-slot="avatar-image" src={src} alt="" className="size-full rounded-[inherit] object-cover" /> : text}
       {presence ? (
         <span

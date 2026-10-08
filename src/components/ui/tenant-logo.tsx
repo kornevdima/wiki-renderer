@@ -70,6 +70,7 @@ function TenantLogo({ name, initials, src, tone = "indigo", size = "m", decorati
       )}
       {...props}
     >
+      {/* eslint-disable-next-line @next/next/no-img-element -- framework-agnostic registry: next/image is a Next-only API, and a mark-sized logo the tenant supplies needs no optimisation */}
       {src ? <img data-slot="tenant-logo-image" src={src} alt="" className="size-full rounded-[inherit] object-contain" /> : tenantInitials(name, initials)}
     </span>
   )

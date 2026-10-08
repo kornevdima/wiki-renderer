@@ -60,7 +60,7 @@ default is never shown. `tools/registry-add.sh ... brand` copies `public/esg-log
 | `src/app/api/wikis/[wikiId]/{asset,source,search-index}/` | the snapshot's files, by sha |
 | `src/app/page.tsx` | the wiki list, or a redirect when only one wiki is configured |
 | `src/components/reader/` | reader UI (shell, sidebar, nav tree, outline, search dialog, PDF, source view) |
-| `src/components/ui/`, `src/components/layout/`, `src/app/esg-theme.css`, `src/fonts/` | **installed** from the ESG design-system registry; don't hand-edit. Installed at design system **v31** (2026-10-08). Restore `package.json` and `package-lock.json` after `registry-add.sh` (the CLI loosens exact pins) |
+| `src/components/ui/`, `src/components/layout/`, `src/app/esg-theme.css`, `src/fonts/` | **installed** from the ESG design-system registry; don't hand-edit. Installed at design system **v33** (2026-10-08). Restore `package.json` and `package-lock.json` after `registry-add.sh` (the CLI loosens exact pins) |
 | `tests/e2e/`, `tests/fixtures/` | Playwright smoke suite and its two sample wikis |
 
 ## Conventions

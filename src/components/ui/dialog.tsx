@@ -17,6 +17,7 @@ import {
   type DiscardLabels,
 } from "@/components/ui/dialog-guard"
 import { MODAL_LAYER_PROPS, SHORTCUTS, isComposing, matchShortcut } from "@/lib/keyboard"
+import { useReturnFocus } from "@/components/ui/return-focus"
 import {
   BODY_CLASS,
   CLOSE_CLASS,
@@ -114,6 +115,8 @@ function DialogContent({
   onInteractOutside,
   onEscapeKeyDown,
   onKeyDown,
+  onOpenAutoFocus,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   /** Defaults to true, except the confirm variant, which the mockup draws without one. */
@@ -166,6 +169,8 @@ function DialogContent({
     [variant, withClose, closeLabel, requestDiscard]
   )
   const discardWords = { ...DISCARD_DEFAULT_LABELS, ...discardLabels }
+  // Esc and every close return focus to the opener, with or without a DialogTrigger (v32 fix; return-focus.ts).
+  const focusReturn = useReturnFocus({ onOpenAutoFocus, onCloseAutoFocus })
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -174,6 +179,7 @@ function DialogContent({
         data-variant={variant}
         {...dialogRoleProps(variant)}
         {...MODAL_LAYER_PROPS}
+        {...focusReturn}
         data-discarding={showBar ? "true" : undefined}
         className={cn(CONTENT_CLASS, size === "large" && CONTENT_LARGE_CLASS, className)}
         onInteractOutside={(event) => {
