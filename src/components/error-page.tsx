@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { BareFrame } from "@/components/layout/bare-frame";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { brandProps } from "@/components/brand-props";
 
 /**
  * The page shown when a screen fails to render (US-205, NFR-013): the US-195 bare frame (slim brand bar, one `<main>`) around a
@@ -22,7 +23,7 @@ export function ErrorPage({ onRetry }: { onRetry: () => void }) {
   const tUnavailable = useTranslations("unavailableView");
   const tBrand = useTranslations("brand");
   const tShell = useTranslations("readerShell");
-  const brand = { company: tBrand("company"), product: tShell("brandProduct"), initials: tBrand("initials"), logo: tBrand("logo") };
+  const brand = brandProps({ company: tBrand("company"), product: tShell("brandProduct"), initials: tBrand("initials"), logo: tBrand("logo"), tone: tBrand("tone") });
 
   return (
     <BareFrame brand={brand} testId="error-page">

@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 
 import { NotFoundView } from "@/components/not-found-view";
+import { brandProps } from "@/components/brand-props";
 
 /**
  * The app-wide `not-found.js` (US-120 contract, found while proving S2a on
@@ -28,7 +29,7 @@ export default async function NotFound() {
 
   return (
     <NotFoundView
-      brand={{ company: tBrand("company"), product: tBrand("product"), initials: tBrand("initials"), logo: tBrand("logo") }}
+      brand={brandProps({ company: tBrand("company"), product: tBrand("product"), initials: tBrand("initials"), logo: tBrand("logo"), tone: tBrand("tone") })}
       heading={t("heading")}
       description={t("description")}
       homeLabel={t("homeLink")}

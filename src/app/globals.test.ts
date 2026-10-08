@@ -280,7 +280,8 @@ describe("esg-theme.css theme wiring (US-170)", () => {
     // light needs its own dark value.
     const literals = (t: Map<string, string>): string[] => [...t.entries()].filter(([, v]) => !v.startsWith("var(")).map(([k]) => k).sort();
     // Only the theme-invariant gradients and the fills composed from them (which hold no theme colour) are written once.
-    const invariant = /^--(gradient-(brand|hero|spectrum)|(brand|shade)-(hover|active)-fill)$/;
+    // v31 adds the TenantLogo grounds (gradient-mark-*); hover-overlay-fill is composed from a theme variable like the others.
+    const invariant = /^--(gradient-(brand|hero|spectrum|mark-(indigo|deep|glow))|(brand|shade)-(hover|active)-fill|hover-overlay-fill)$/;
     const missingInDark = literals(light).filter((k) => !dark.has(k));
     expect(missingInDark.filter((k) => !invariant.test(k))).toEqual([]);
     expect(literals(dark).filter((k) => !light.has(k))).toEqual([]);

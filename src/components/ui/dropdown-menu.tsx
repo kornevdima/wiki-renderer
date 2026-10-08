@@ -3,6 +3,7 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
+import { Kbd } from "@/components/ui/kbd"
 
 /**
  * US-176 (NFR-013; ADR-014, ADR-019): the design system's DropdownMenu on the vendored Radix menu: `role="menu"` with
@@ -61,4 +62,12 @@ function DropdownMenuItem({
   )
 }
 
-export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem }
+/**
+ * An item's keyboard shortcut at its end (the spec's `esg-menu__hint`): a plain Kbd in `caption`, `ink-secondary`. Show the
+ * shortcut the app really binds (brand book, Admin apps › Keyboard), never a single letter.
+ */
+function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<"kbd">) {
+  return <Kbd variant="plain" data-slot="dropdown-menu-shortcut" className={cn("ms-auto ps-4 text-caption", className)} {...props} />
+}
+
+export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuShortcut }

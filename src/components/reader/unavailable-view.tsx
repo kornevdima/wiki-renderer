@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 
 import { DocumentTitle } from "./document-title-tag";
+import { brandProps } from "@/components/brand-props";
 
 /**
  * The reader's "nothing to show" view (SA-MOD Reader UI and print §3, Amendment A3; US-100, US-102, US-103). It
@@ -42,7 +43,7 @@ export function UnavailableView(props: UnavailableViewProps) {
   const tRetry = useTranslations("retryView");
   const tBrand = useTranslations("brand");
   const tShell = useTranslations("readerShell");
-  const brand = { company: tBrand("company"), product: tShell("brandProduct"), initials: tBrand("initials"), logo: tBrand("logo") };
+  const brand = brandProps({ company: tBrand("company"), product: tShell("brandProduct"), initials: tBrand("initials"), logo: tBrand("logo"), tone: tBrand("tone") });
 
   const back = (variant: "solid" | "outline") => (
     <Button asChild variant={variant} size="sm">

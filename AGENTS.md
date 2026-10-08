@@ -32,9 +32,10 @@ fingerprinted by path, size and mtime, and a changed fingerprint rebuilds the sn
 
 ## Branding
 
-The default brand is neutral: **Wiki Renderer** / **Wikis**, a **WR** initials avatar on the design system's brand
-gradient, and tab titles ending "· Wiki Renderer". There is no ESG logo in the repo. A deployment brands itself with
-`BRAND_NAME`, `BRAND_PRODUCT`, `BRAND_INITIALS`, `BRAND_LOGO` (an image file, served at `/api/brand/logo`) and
+The default brand is neutral: **Wiki Renderer** / **Wikis**, a **WR** TenantLogo (design system v31: the ESG mark's
+rounded square, initials on the `indigo` ground, never the brand gradient), and tab titles ending "· Wiki Renderer".
+There is no ESG logo in the repo. A deployment brands itself with `BRAND_NAME`, `BRAND_PRODUCT`, `BRAND_INITIALS` (one or
+two letters), `BRAND_TONE` (`indigo`, `deep` or `glow`), `BRAND_LOGO` (an image file, served at `/api/brand/logo`) and
 `BRAND_TITLE` (see `.env.local.example`). For example, a firm's own branding:
 
 ```bash
@@ -43,7 +44,9 @@ BRAND_LOGO=/path/to/logo.png npm run dev
 ```
 
 `src/lib/branding.ts` reads the env, and `src/i18n/request.ts` merges it into the `brand.*`, `readerShell.brandProduct`
-and `documentTitle.suffix` messages. Screens never read the env themselves.
+and `documentTitle.suffix` messages. Screens never read the env themselves: each builds the registry `Brand`'s props
+through `src/components/brand-props.tsx`, which always passes a TenantLogo as its `mark`, so the registry's ESG PNG
+default is never shown. `tools/registry-add.sh ... brand` copies `public/esg-logo-mark.png`: delete it again.
 
 ## Folder map
 
@@ -57,7 +60,7 @@ and `documentTitle.suffix` messages. Screens never read the env themselves.
 | `src/app/api/wikis/[wikiId]/{asset,source,search-index}/` | the snapshot's files, by sha |
 | `src/app/page.tsx` | the wiki list, or a redirect when only one wiki is configured |
 | `src/components/reader/` | reader UI (shell, sidebar, nav tree, outline, search dialog, PDF, source view) |
-| `src/components/ui/`, `src/components/layout/`, `src/app/esg-theme.css`, `src/fonts/` | **installed** from the ESG design-system registry; don't hand-edit. **Exception:** `layout/brand.tsx` is app-owned since 2026-10-08 (initials avatar or configured logo instead of the ESG mark); don't overwrite it from the registry |
+| `src/components/ui/`, `src/components/layout/`, `src/app/esg-theme.css`, `src/fonts/` | **installed** from the ESG design-system registry; don't hand-edit. Installed at design system **v31** (2026-10-08). Restore `package.json` and `package-lock.json` after `registry-add.sh` (the CLI loosens exact pins) |
 | `tests/e2e/`, `tests/fixtures/` | Playwright smoke suite and its two sample wikis |
 
 ## Conventions

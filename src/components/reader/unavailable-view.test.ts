@@ -63,7 +63,7 @@ describe("S11 (X6, US-100): UnavailableView takes only a kind, and the uniform v
     const out = html(createElement(UnavailableView, { kind: "no-access" }));
     expect(out.startsWith('<div data-slot="bare-frame"')).toBe(true);
     expect(out).toContain('<main id="main" tabindex="-1" data-testid="unavailable-view" class=');
-    expect(out).not.toContain("data-kind");
+    expect(out).not.toMatch(/<main\b[^>]*data-kind/); // the brand's TenantLogo carries its own data-kind
     expect(out).not.toContain("<title>");
     expect(out.match(/<main\b/g)).toHaveLength(1);
     const text = out.replace(/<[^>]*>/g, "|").split("|").filter(Boolean);
@@ -256,7 +256,7 @@ describe("US-195: the five views' look", () => {
       expect(bar).toMatch(/\bborder-b\b/);
       expect(bar).toContain("print:hidden");
       expect(bar).toContain('data-testid="brand"');
-      expect(bar).toContain('data-testid="brand-avatar"');
+      expect(bar).toContain('data-slot="tenant-logo"');
       expect(bar).toContain(">WR<");
       expect(bar).toContain(">Wiki Renderer<");
       expect(bar).toContain(">Wikis<");

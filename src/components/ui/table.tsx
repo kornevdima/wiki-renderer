@@ -4,6 +4,7 @@ import * as React from "react"
 import { useOverflowFocusable } from "@/components/ui/overflow-focusable"
 import { SkeletonBar } from "@/components/ui/skeleton"
 import { AVATAR_TONE_CLASS, avatarTone, personInitials, personLabel } from "@/components/ui/table-person"
+import { TABLE_BLANK_CLASS, TABLE_BLANK_DEFAULT_LABEL, TABLE_BLANK_MARK } from "@/components/ui/table-classes"
 import { cn } from "@/lib/utils"
 
 /**
@@ -71,12 +72,27 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   )
 }
 
-function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
+/**
+ * US-226 (spec: DataTable, "De-emphasised (muted)"): an archived or inactive row. A change of ground and text colour, never
+ * opacity: `ink-secondary` on `surface-muted` (6.01:1 light / 9.86:1 dark; 5.55 / 8.34 under the hover fill). The row name
+ * (`th`) and links turn `ink-secondary` too; buttons (Restore) and StatusBadges keep their colours. Selection still wins.
+ * The row must also carry a word, the Archived Tag, so the state is never colour alone.
+ */
+export { TABLE_BLANK_CLASS, TABLE_META_CLASS, TABLE_PRIMARY_LINK_CLASS } from "@/components/ui/table-classes"
+
+export const TABLE_ROW_MUTED_CLASS =
+  "data-muted:not-data-[state=selected]:bg-surface-muted data-muted:text-ink-secondary " +
+  "data-muted:hover:bg-(image:--hover-overlay-fill) data-muted:has-aria-expanded:bg-(image:--hover-overlay-fill) " +
+  "[&[data-muted]_th]:text-ink-secondary [&[data-muted]_a]:text-ink-secondary"
+
+function TableRow({ className, muted = false, ...props }: React.ComponentProps<"tr"> & { muted?: boolean }) {
   return (
     <tr
       data-slot="table-row"
+      data-muted={muted || undefined}
       className={cn(
-        "transition-colors duration-(--duration-base) ease-(--ease-base) motion-reduce:transition-none hover:bg-hover-overlay has-aria-expanded:bg-hover-overlay data-[state=selected]:bg-surface-selected",
+        "transition-colors duration-(--duration-base) ease-(--ease-base) motion-reduce:transition-none not-data-muted:hover:bg-hover-overlay not-data-muted:has-aria-expanded:bg-hover-overlay data-[state=selected]:bg-surface-selected",
+        TABLE_ROW_MUTED_CLASS,
         className
       )}
       {...props}
@@ -149,6 +165,34 @@ function TableCell({
       )}
       {...props}
     />
+  )
+}
+
+/**
+ * "No value" (DataTable spec, ruled 2026-10-07): the em dash in `ink-secondary`, `aria-hidden`, with a visually hidden label
+ * for screen readers. `label` is the app's translation, English "Not set" by default (US-224 precedent: a prop, no messages
+ * namespace). Use it inside any cell; `TableBlankCell` is the whole cell.
+ */
+function TableBlank({ label = TABLE_BLANK_DEFAULT_LABEL }: { label?: string }) {
+  return (
+    <>
+      <span data-slot="table-blank" aria-hidden="true" className={TABLE_BLANK_CLASS}>
+        {TABLE_BLANK_MARK}
+      </span>
+      <span className="sr-only">{label}</span>
+    </>
+  )
+}
+
+/** A body cell with no value: `TableCell` holding `TableBlank`. Takes TableCell's props (`numeric` keeps the dash right-aligned). */
+function TableBlankCell({
+  label,
+  ...props
+}: Omit<React.ComponentProps<typeof TableCell>, "children"> & { label?: string }) {
+  return (
+    <TableCell data-blank="true" {...props}>
+      <TableBlank label={label} />
+    </TableCell>
   )
 }
 
@@ -252,6 +296,8 @@ function TableCaption({
 export {
   Table,
   TableActionsHead,
+  TableBlank,
+  TableBlankCell,
   TableBody,
   TableCaption,
   TableCell,

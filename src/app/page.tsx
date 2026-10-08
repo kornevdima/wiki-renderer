@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
+import { brandProps } from "@/components/brand-props";
 import { Brand } from "@/components/layout/brand";
 import { MAIN_REGION, PAGE_CONTENT_CLASS } from "@/components/layout/main-region";
 import { PageHeader } from "@/components/layout/page-header";
@@ -34,7 +35,7 @@ export default async function Home() {
 
   return (
     <div data-testid="app-shell">
-      <Topbar leading={<Brand company={tBrand("company")} product={tBrand("product")} initials={tBrand("initials")} logo={tBrand("logo")} />}>
+      <Topbar leading={<Brand {...brandProps({ company: tBrand("company"), product: tBrand("product"), initials: tBrand("initials"), logo: tBrand("logo"), tone: tBrand("tone") })} />}>
         <LocaleSwitcher label={tLocale("label")} optionLabels={{ en: tLocale("en") }} />
         <ThemeControl />
       </Topbar>

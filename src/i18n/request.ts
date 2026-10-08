@@ -13,7 +13,7 @@ export default getRequestConfig(async () => {
   const brand = branding();
   const messages = {
     ...base,
-    brand: { ...base.brand, company: brand.name, product: brand.product, initials: brand.initials, logo: brand.logo },
+    brand: { ...base.brand, company: brand.name, product: brand.product, initials: brand.initials, logo: brand.logo, tone: brand.tone },
     readerShell: { ...base.readerShell, brandProduct: brand.product },
     documentTitle: { ...base.documentTitle, suffix: brand.titleSuffix },
   };

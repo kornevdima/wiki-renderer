@@ -19,7 +19,8 @@
     "company": "Wiki Renderer",
     "product": "Wikis",
     "initials": "WR",
-    "logo": ""
+    "logo": "",
+    "tone": "indigo"
   },
   "toast": {
     "notifications": "Notifications",

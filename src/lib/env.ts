@@ -28,9 +28,11 @@ const schema = z.object({
   // ── Branding (optional; `src/lib/branding.ts`) ─────────────────────────
   BRAND_NAME: z.string().trim().min(1).default("Wiki Renderer"),
   BRAND_PRODUCT: z.string().trim().min(1).default("Wikis"),
-  // One to three characters for the avatar; derived from BRAND_NAME when unset.
-  BRAND_INITIALS: blankAsUnset.pipe(z.string().trim().min(1).max(3).optional()),
-  // A logo image file (png, jpg, svg, webp) shown in place of the initials avatar.
+  // One or two letters for the TenantLogo; derived from BRAND_NAME when unset.
+  BRAND_INITIALS: blankAsUnset.pipe(z.string().trim().min(1).max(2).optional()),
+  // The TenantLogo's ground behind the initials (design system v31): indigo (default), deep or glow.
+  BRAND_TONE: z.enum(["indigo", "deep", "glow"]).default("indigo"),
+  // A logo image file (png, jpg, svg, webp) shown in place of the initials.
   BRAND_LOGO: blankAsUnset,
   // The tab-title suffix ("<page> · <wiki> · <suffix>"); BRAND_NAME when unset.
   BRAND_TITLE: blankAsUnset,

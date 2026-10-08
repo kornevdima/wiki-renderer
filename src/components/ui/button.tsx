@@ -32,6 +32,10 @@ const buttonVariants = cva(
         danger: `${FILLED} bg-danger-fill text-on-danger not-disabled:hover:bg-(image:--shade-hover-fill) not-disabled:active:bg-(image:--shade-active-fill)`,
         outline:
           `${EDGE} border-border-strong bg-transparent text-foreground not-disabled:not-aria-invalid:hover:border-foreground not-disabled:hover:bg-hover-overlay aria-expanded:bg-hover-overlay`,
+        // Admin second accent (ruled 2026-10-07): the outline in accent-text (magenta), label and border, for non-cancel secondary
+        // actions (Edit, Preview, Seed). Hover is a change of fill only; the border keeps the accent. Cancel stays `outline`.
+        "outline-accent":
+          `${EDGE} border-accent-text bg-transparent text-accent-text not-disabled:hover:bg-hover-overlay aria-expanded:bg-hover-overlay`,
         secondary:
           `${EDGE} border-transparent bg-secondary text-secondary-foreground not-disabled:hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground`,
         ghost: `${EDGE} border-transparent text-foreground not-disabled:hover:bg-hover-overlay aria-expanded:bg-hover-overlay`,

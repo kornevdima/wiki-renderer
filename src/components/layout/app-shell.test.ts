@@ -11,6 +11,7 @@ import messages from "../../../messages/en.json";
 
 import { AppShell, APP_NAV_ID } from "./app-shell";
 import { Brand } from "./brand";
+import { brandProps, type BrandStrings } from "@/components/brand-props";
 import { NavToggle } from "./nav-toggle";
 import { Topbar } from "./topbar";
 
@@ -128,15 +129,24 @@ describe("Topbar", () => {
 });
 
 describe("Brand", () => {
-  it("links to / with the mark and both lines of text, which are visually hidden (not removed) on a narrow screen", () => {
-    const out = html(createElement(Brand, { company: "The Firm", product: "wiki-renderer" }));
+  const props = (over: Partial<BrandStrings> = {}): BrandStrings => ({ company: "Wiki Renderer", product: "Wikis", initials: "", logo: "", tone: "indigo", ...over });
+
+  it("links to / with a decorative TenantLogo and both lines of text, visually hidden (not removed) on a narrow screen", () => {
+    const out = html(createElement(Brand, brandProps(props())));
     expect(out).toMatch(/<a [^>]*href="\/"/);
-    expect(out).toMatch(/<span data-testid="brand-avatar" aria-hidden="true"[^>]*bg-\(image:--gradient-brand\)[^>]*>TF<\/span>/);
-    expect(out).not.toContain("<img");
-    const branded = html(createElement(Brand, { company: "Acme", product: "Docs", logo: "/api/brand/logo" }));
-    expect(branded).toMatch(/<img src="\/api\/brand\/logo" alt=""[^>]*data-testid="brand-logo"/);
-    expect(branded).not.toContain("brand-avatar");
-    expect(out).toContain("The Firm");
+    expect(out).toMatch(/<span data-slot="tenant-logo" data-size="s" data-kind="initials" data-tone="indigo" aria-hidden="true"[^>]*>WR<\/span>/);
+    expect(out).toContain("rounded-(--ds-radius-mark)");
+    expect(out).not.toContain("--gradient-brand)");
+    expect(out).not.toContain("esg-logo-mark.png");
+    expect(out).toContain("Wiki Renderer");
     expect(out).toContain("max-md:sr-only");
+  });
+
+  it("explicit initials and tone, and a logo image in place of the initials", () => {
+    expect(html(createElement(Brand, brandProps(props({ initials: "es", tone: "glow" }))))).toMatch(/data-tone="glow"[^>]*>ES<\/span>/);
+    expect(html(createElement(Brand, brandProps(props({ tone: "brand" }))))).toContain('data-tone="indigo"');
+    const logo = html(createElement(Brand, brandProps(props({ logo: "/api/brand/logo" }))));
+    expect(logo).toMatch(/<img data-slot="tenant-logo-image" src="\/api\/brand\/logo" alt=""/);
+    expect(logo).not.toContain(">WR<");
   });
 });
