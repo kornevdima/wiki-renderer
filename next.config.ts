@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
+  // A page save sends the editor's Markdown twice (before any edit and now, up to 5 MB each) and an image upload up to
+  // 10 MB; the default 1 MB would refuse both. Actions stay same-origin only.
+  experimental: {
+    serverActions: { bodySizeLimit: "12mb" },
+  },
   // Static response headers. The CSP carries a per-request nonce and is set in `src/proxy.ts`; these are the headers
   // that don't need one, and they also reach `_next/static`, which the proxy matcher excludes.
   async headers() {

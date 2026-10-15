@@ -27,7 +27,7 @@ export interface PageBarProps {
 export function PageBar({ crumbs, sourceControls, diagramCount, viewKey }: PageBarProps) {
   const tCrumbs = useTranslations("breadcrumbs");
   const tPdf = useTranslations("pdf");
-  const inSource = sourceControls?.mode === "source";
+  const inSource = sourceControls?.mode === "source" || sourceControls?.mode === "edit";
   return (
     <div className="wr-pagebar flex flex-wrap items-center justify-between gap-x-4 gap-y-3 print:hidden" data-testid="reader-pagebar">
       <div className="min-w-0 flex-[1_1_280px]">

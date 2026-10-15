@@ -10,7 +10,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # wiki-renderer (local)
 
-A **local, read-only** renderer for Obsidian-flavoured Markdown wikis that sit in folders on this machine. It's one
+A **local** renderer and editor for Obsidian-flavoured Markdown wikis that sit in folders on this machine. It's one
 Next.js (App Router) app on Node 24, with no sign-in, no tenants, no database and no GitHub. Each wiki is a folder named
 in `WIKI_DIRS`. The reader comes from a private multi-tenant renderer: this repo was scaffolded from it on 2026-10-08, with tenancy,
 auth, admin, MongoDB and the GitHub App removed and a filesystem source added. Its first consumer is the `project-management` vault, which reads its own `wiki/` through it.
@@ -29,6 +29,24 @@ or from its parent's name when the folder is called `wiki`. With one wiki, `/` r
 `/` lists them. Edits in the vault show on the next request after `WIKI_RECHECK_MS` (default 1 s): the folder is
 fingerprinted by path, size and mtime, and a changed fingerprint rebuilds the snapshot. The server binds to
 `127.0.0.1` because nothing is access-controlled.
+
+## Editing
+
+Every page has **Edit** (`?view=edit`): the ESG Design System's RichTextEditor (MDXEditor; ESG toolbar and dialogs since v49) on the
+page's Markdown, with a Rich text / Source / Changes switch. **Save** (or ⌘S / Ctrl S) writes the file in the wiki folder; you commit and push with git.
+
+- **Untouched text stays byte-identical.** The save sends the editor's Markdown before any edit and now; `content/edit/merge.ts`
+  maps both back onto the file, so only the blocks, lines and characters you changed are rewritten. HTML comments, which the
+  editor drops, are kept. Gate (2026-10-16, the project-management vault): 835/835 pages unchanged on a no-edit save, 648/648
+  edits kept to their block, 643/648 mid-line edits byte-exact (the rest: lines whose code-span URLs the editor rewrites).
+- **Obsidian syntax:** wikilinks, embeds and `> [!callout]` show as text in the editor and are written back unescaped.
+- **A page the editor can't parse** (MDX-like `<screen>` text) opens as plain source in a text area and saves the same way.
+- **Conflicts:** if the file changed on disk after you opened it (Obsidian, `git pull`), nothing is saved; reload and redo.
+- **Images:** the image dialog uploads a picked file into `assets/` at the wiki root (operator, 2026-10-16: "One assets/ folder";
+  safe file name, never over an existing file, 10 MB, PNG/JPG/GIF/WebP/SVG) and writes a Markdown image relative to the page
+  (`![Alt](../assets/name.png)`). The editor previews wiki images through `/api/wikis/<id>/latest-asset/<path>`, a redirect to the
+  asset route at the current snapshot sha.
+- `WIKI_READ_ONLY=true` hides Edit and refuses saves and uploads.
 
 ## Branding
 
@@ -52,22 +70,23 @@ default is never shown. `tools/registry-add.sh ... brand` copies `public/esg-log
 
 | Path | What |
 |---|---|
-| `src/content/runtime/` | `config.ts` (parses `WIKI_DIRS`), `local-source.ts` (folder → files + fingerprint sha), `build.ts` (one parse → snapshot), `index.ts` (`getSnapshot`, `listWikis`, `findWiki`), `cache.ts`, `tree.ts` |
+| `src/content/runtime/` | `config.ts` (parses `WIKI_DIRS`), `local-source.ts` (folder → files + fingerprint sha), `local-write.ts` (the only writer: saves one existing `.md` page, adds an image to `assets/`), `build.ts` (one parse → snapshot), `index.ts` (`getSnapshot`, `listWikis`, `findWiki`), `cache.ts`, `tree.ts` |
+| `src/content/edit/` | `merge.ts`: the save's block-preserving merge (untouched blocks, lines and characters keep their original bytes; HTML comments kept; Obsidian syntax unescaped) |
 | `src/content/render/` | Markdown → React pipeline: wikilinks, embeds, callouts, Mermaid placeholders, Shiki, sanitiser, render cache |
 | `src/content/links/` | link map and resolution, asset URLs, path confinement |
 | `src/content/search/` | MiniSearch index built at snapshot time; client-side query |
-| `src/app/w/[wikiId]/[[...path]]/` | the reader page (landing, page, `?view=source`) |
-| `src/app/api/wikis/[wikiId]/{asset,source,search-index}/` | the snapshot's files, by sha |
+| `src/app/w/[wikiId]/[[...path]]/` | the reader page (landing, page, `?view=source`, `?view=edit`) and `actions.ts` (`savePageAction`, `uploadImageAction`) |
+| `src/app/api/wikis/[wikiId]/{asset,source,search-index}/` | the snapshot's files, by sha; `latest-asset/` redirects the editor's image previews to the current sha |
 | `src/app/page.tsx` | the wiki list, or a redirect when only one wiki is configured |
-| `src/components/reader/` | reader UI (shell, sidebar, nav tree, outline, search dialog, PDF, source view) |
-| `src/components/ui/`, `src/components/layout/`, `src/app/esg-theme.css`, `src/fonts/` | **installed** from the ESG design-system registry; don't hand-edit. Installed at design system **v34** (2026-10-08). Restore `package.json` and `package-lock.json` after `registry-add.sh` (the CLI loosens exact pins) |
+| `src/components/reader/` | reader UI (shell, sidebar, nav tree, outline, search dialog, PDF, source view, editor: `edit-view.tsx`, `edit-editor.tsx`) |
+| `src/components/ui/`, `src/components/layout/`, `src/app/esg-theme.css`, `src/fonts/` | **installed** from the ESG design-system registry; don't hand-edit. Installed at design system **v49** (2026-10-16, artifact version 114; re-pulled from v34 for the editor's controls). Restore `package.json` and `package-lock.json` after `registry-add.sh` (the CLI loosens exact pins) |
 | `tests/e2e/`, `tests/fixtures/` | Playwright smoke suite and its two sample wikis |
 
 ## Conventions
 
 - `content/*` never imports `app/*` or `components/*`, except for the handful of request helpers that already did so in
   the service. Routes call `getSnapshot` and then render.
-- `content/runtime/local-source.ts` is the only module that touches the filesystem for wiki content.
+- `content/runtime/local-source.ts` is the only module that reads wiki content from the filesystem, and `content/runtime/local-write.ts` the only one that writes it.
 - Folder skipping matches what a GitHub tarball would carry. Only `.git`, `node_modules`, `.obsidian`, `.trash` and
   `.DS_Store` are skipped. Every other folder is content, dot folders included (DEC-006 in the vault: nothing is
   hidden by name).
@@ -106,7 +125,8 @@ comes back through the registry. `src/app/colour-guard.test.ts` fails on any han
 - Don't add a second parse pass. The link map, search index and tree all derive from one `parsePages`.
 - Don't build a server-side PDF path. Save as PDF is the browser's print.
 - Don't bind to `0.0.0.0` or add a public deploy without first adding access control. There is none.
-- Don't write to a wiki folder. The renderer is read-only.
+- Don't write to a wiki folder anywhere but `local-write.ts`, reached only through `savePageAction`. It saves an existing `.md` page inside the wiki's real root, never creates or deletes files, refuses when the file changed since it was opened, and is off when `WIKI_READ_ONLY=true`. Committing and pushing stay the person's own git steps.
+- Don't save the editor's Markdown as is: always go through `mergeEdit`, which keeps what the person didn't touch byte-identical.
 - Don't add brand colours, radii, shadows or fonts by hand.
 
 ## Delivery records

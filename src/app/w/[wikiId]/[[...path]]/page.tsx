@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fragment } from "react";
 import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { DocumentTitle, EmptyWikiTitle } from "@/components/reader/document-title-tag";
 import { diagramSetKey } from "@/components/reader/diagram-set-key";
@@ -11,7 +12,9 @@ import { PageMeta } from "@/components/reader/page-meta";
 import { PageShell } from "@/components/reader/page-shell";
 import { UnavailableView } from "@/components/reader/unavailable-view";
 import { emitServerTiming, nowMs } from "@/components/reader/render-timing";
-import { decodeSource, isSourceView, sourceDownloadUrl, sourceViewHref } from "@/components/reader/source-view";
+import { EditView } from "@/components/reader/edit-view";
+import { editorCopy } from "@/components/reader/editor-messages";
+import { decodeSource, editViewHref, isEditView, isSourceView, sourceDownloadUrl, sourceViewHref } from "@/components/reader/source-view";
 import { SourceView } from "@/components/reader/source-view-body";
 import { readerWikiFor } from "@/components/reader/reader-wiki";
 import { isStaleNoticeDue } from "@/components/reader/stale-notice-format";
@@ -24,6 +27,7 @@ import {
 } from "@/components/reader/wiki-path";
 import { renderPage } from "@/content/render/render";
 import { findWiki, getSnapshot } from "@/content/runtime";
+import { hashText } from "@/content/runtime/local-write";
 import type { SnapshotResult } from "@/content/runtime/types";
 import { env } from "@/lib/env";
 import { log } from "@/lib/log";
@@ -35,7 +39,7 @@ import { log } from "@/lib/log";
  *  2. Path safety (`resolveRequestedPath`): invalid -> `notFound()`.
  *  3. `getSnapshot` (a rejection is treated like `unavailable`): `unavailable` -> the retry screen (200); `stale` past
  *     `WIKI_SNAPSHOT_STALE_NOTICE_MS` -> the page plus the notice.
- *  4. Landing (first page in tree order), `?view=source`, or `renderPage`, synchronously after step 3's await.
+ *  4. Landing (first page in tree order), `?view=source`, `?view=edit` (unless `WIKI_READ_ONLY`), or `renderPage`.
  *
  * `params.path` arrives percent-ENCODED and `resolveRequestedPath` decodes it exactly once. The tab `<title>` is set by
  * a React 19 hoisted `<title>` so no second `getSnapshot` call (`generateMetadata`) is needed.
@@ -122,6 +126,54 @@ export default async function WikiPage({
     );
   }
 
+  // `?view=edit`: the editor on the snapshot's bytes of the file and their hash; the save refuses if the disk moved on.
+  if (isEditView(view)) {
+    if (env.WIKI_READ_ONLY) redirect(pageHref(wikiId, requested.path));
+    const parsed = snapshot.pages.get(requested.path);
+    const file = parsed === undefined ? undefined : snapshot.files.get(requested.path);
+    if (parsed === undefined || file === undefined) notFound();
+    const text = decodeSource(file.bytes);
+    const t = await getTranslations("edit");
+    return (
+      <PageShell
+        wikiId={wikiId}
+        wiki={wiki}
+        sha={snapshot.sha}
+        tree={snapshot.tree}
+        activePath={requested.path}
+        pageTitle={parsed.title}
+        stale={stale}
+        sourceControls={{ mode: "edit", pageHref: pageHref(wikiId, requested.path) }}
+      >
+        <DocumentTitle screen={t("documentTitle", { title: parsed.title })} wiki={wiki.name} />
+        <h1 className="wr-source-title">{parsed.title}</h1>
+        <EditView
+          key={requested.path}
+          wikiId={wikiId}
+          path={requested.path}
+          text={text}
+          hash={hashText(text)}
+          editor={await editorCopy()}
+          copy={{
+            editorLabel: t("editorLabel", { title: parsed.title }),
+            sourceLabel: t("sourceLabel", { title: parsed.title }),
+            save: t("save"),
+            saving: t("saving"),
+            saved: t("saved"),
+            unsaved: t("unsaved"),
+            loading: t("loading"),
+            sourceOnly: t("sourceOnly"),
+            conflict: t("conflict"),
+            reload: t("reload"),
+            failed: t("failed"),
+            readOnly: t("readOnly"),
+            rewritten: t("rewritten"),
+          }}
+        />
+      </PageShell>
+    );
+  }
+
   const rendered = renderPage(snapshot, requested.path);
   if ("state" in rendered) notFound();
 
@@ -132,7 +184,7 @@ export default async function WikiPage({
   emitServerTiming(log, "rendered", wikiId, startedAt, nowMs());
 
   return (
-    <PageShell wikiId={wikiId} wiki={wiki} sha={snapshot.sha} tree={snapshot.tree} activePath={requested.path} pageTitle={rendered.title} stale={stale} sourceControls={{ mode: "page", sourceHref: sourceViewHref(wikiId, requested.path) }} frontmatter={rendered.frontmatterView} outline={rendered.outline} diagramCount={rendered.mermaidBlocks.length} viewKey={diagramSetKey(rendered.path, rendered.mermaidBlocks)}>
+    <PageShell wikiId={wikiId} wiki={wiki} sha={snapshot.sha} tree={snapshot.tree} activePath={requested.path} pageTitle={rendered.title} stale={stale} sourceControls={{ mode: "page", sourceHref: sourceViewHref(wikiId, requested.path), editHref: env.WIKI_READ_ONLY ? undefined : editViewHref(wikiId, requested.path) }} frontmatter={rendered.frontmatterView} outline={rendered.outline} diagramCount={rendered.mermaidBlocks.length} viewKey={diagramSetKey(rendered.path, rendered.mermaidBlocks)}>
       <DocumentTitle screen={rendered.title} wiki={wiki.name} />
       {/* US-220: the meta line follows the page's h1, the injected title or the body's own leading h1 (`leadHeading`). */}
       <Fragment key={rendered.path}>

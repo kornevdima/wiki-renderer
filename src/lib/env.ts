@@ -24,6 +24,8 @@ const schema = z.object({
   WIKI_MAX_BYTES: z.coerce.number().int().positive().default(209715200), // 200 MB
   // How long a folder must have been unreadable before the reader shows the staleness notice.
   WIKI_SNAPSHOT_STALE_NOTICE_MS: z.coerce.number().int().nonnegative().default(0),
+  // "true" hides Edit and refuses saves: the reader never writes to a wiki folder.
+  WIKI_READ_ONLY: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
 
   // ── Branding (optional; `src/lib/branding.ts`) ─────────────────────────
   BRAND_NAME: z.string().trim().min(1).default("Wiki Renderer"),

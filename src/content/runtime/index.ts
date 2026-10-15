@@ -68,6 +68,12 @@ export async function getSnapshot(wikiId: string): Promise<SnapshotResult> {
   }
 }
 
+/** After a save: the next request re-fingerprints the folder at once instead of after `WIKI_RECHECK_MS`. */
+export function invalidateSnapshot(wikiId: string): void {
+  const cached = snapshotCacheStore().get(wikiId);
+  if (cached) cached.lastCheckedAt = 0;
+}
+
 /**
  * `src/instrumentation.ts`'s startup check: parses `WIKI_DIRS` and logs one line per wiki, or exits non-zero on a bad
  * list. Kept here, behind that file's dynamic import, so `process.exit` never reaches the Edge bundle.

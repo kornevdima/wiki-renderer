@@ -20,6 +20,19 @@ export function isSourceView(view: string | string[] | undefined): boolean {
   return view === SOURCE_VIEW_VALUE;
 }
 
+/** The one query value that selects the editor (`?view=edit`, DEC-016 note 2026-10-16). */
+export const EDIT_VIEW_VALUE = "edit";
+
+/** True only for `?view=edit`, by the same rule as `isSourceView`. */
+export function isEditView(view: string | string[] | undefined): boolean {
+  return view === EDIT_VIEW_VALUE;
+}
+
+/** The page's own URL in the editor: the page's canonical href plus `?view=edit`. */
+export function editViewHref(wikiId: string, path: string): string {
+  return `${pageHref(wikiId, path)}?view=${EDIT_VIEW_VALUE}`;
+}
+
 /** The page's own URL in source view (D1): the page's canonical href plus `?view=source`. */
 export function sourceViewHref(wikiId: string, path: string): string {
   return `${pageHref(wikiId, path)}?view=${SOURCE_VIEW_VALUE}`;

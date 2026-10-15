@@ -1,7 +1,7 @@
 ---
 type: index
 title: wiki-renderer (local) code wiki
-updated: 2026-10-08
+updated: 2026-10-16
 tags:
   - code-wiki
 ---
@@ -26,3 +26,8 @@ runtime, the memory-budget LRU, Cloud Build and Docker. Added: `content/runtime/
 simpler `getSnapshot` (fingerprint, rebuild on change, keep serving the last good snapshot on a read error).
 Checks at scaffold: typecheck 0 errors, lint clean, unit 115 files / 1733 tests, e2e smoke 4/4, `next build` clean.
 The `project-management` vault renders: 713 pages, about 9 s for the first build.
+
+## Page editing (2026-10-16)
+
+Edit on every page, block-preserving saves, image uploads to `assets/`; AGENTS.md "Editing". Record:
+[[page-editing-2026-10-16]] (`verification/`, PASS). Branch `feat/page-editing` (`b504b6f`, `302fc23`).

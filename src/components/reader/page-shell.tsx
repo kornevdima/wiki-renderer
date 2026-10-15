@@ -68,8 +68,9 @@ export interface PageShellProps {
    * (`downloadHref`); Save as PDF and its hint are not shown there. Absent on the landing and empty views.
    */
   sourceControls?:
-    | { mode: "page"; sourceHref: string }
-    | { mode: "source"; pageHref: string; downloadHref: string; text: string };
+    | { mode: "page"; sourceHref: string; editHref?: string }
+    | { mode: "source"; pageHref: string; downloadHref: string; text: string }
+    | { mode: "edit"; pageHref: string };
   children: ReactNode;
 }
 
