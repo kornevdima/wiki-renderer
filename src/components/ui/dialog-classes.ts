@@ -1,7 +1,7 @@
 export const OVERLAY_CLASS =
-  "fixed inset-0 isolate z-50 bg-scrim"
+  "fixed inset-0 isolate z-(--z-modal) bg-scrim"
 export const CONTENT_CLASS =
-  "fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100vh-3rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-(--ds-radius-lg) border bg-popover text-sm text-popover-foreground shadow-(--shadow-raised) outline-none sm:max-w-(--modal-w) data-discarding:[&_[data-slot=dialog-footer]]:hidden"
+  "fixed top-1/2 left-1/2 z-(--z-modal) flex max-h-[calc(100vh-3rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-(--ds-radius-lg) border bg-popover text-sm text-popover-foreground shadow-(--shadow-raised) outline-none sm:max-w-(--modal-w) data-discarding:[&_[data-slot=dialog-footer]]:hidden"
 export const CONTENT_LARGE_CLASS = "sm:max-w-(--modal-w-l)"
 export const HEADER_CLASS = "flex items-start justify-between gap-4 px-6 pt-6 pb-3"
 export const BODY_CLASS = "grid min-h-0 flex-1 gap-4 overflow-auto px-6 pt-1 pb-6 text-foreground"

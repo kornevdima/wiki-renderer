@@ -132,7 +132,7 @@ export function AppShell({ sidebar, topbar, children, testId, dataAttributes, si
         />
         {/* One column for the topbar and the page, so the topbar's sticky has the whole page to stick in; it grows when its actions wrap. */}
         <div inert={nav.open} className="col-start-1 row-start-1 flex min-w-0 flex-col lg:col-start-2">
-          <div className="sticky top-0 z-(--z-sticky) min-w-0">{topbar}</div>
+          <div className="sticky top-0 z-(--z-shell) min-w-0">{topbar}</div>
           <div className="min-w-0 flex-1">
             <div className={`${PAGE_CONTENT_CLASS} ${SHELL_MAIN_CLASS}`}>{children}</div>
           </div>

@@ -23,6 +23,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@mdxeditor/editor": "4.3.3",
     "@shikijs/rehype": "4.4.3",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
@@ -30,6 +31,7 @@
     "get-nonce": "1.0.1",
     "github-slugger": "2.0.0",
     "hast-util-to-jsx-runtime": "2.3.6",
+    "lexical": "0.48.0",
     "lucide-react": "1.46.0",
     "mdast-util-to-string": "4.0.0",
     "mermaid": "12.0.0",

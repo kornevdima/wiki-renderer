@@ -51,7 +51,7 @@ function SelectContent({
         data-slot="select-content"
         position={position}
         className={cn(
-          "relative z-50 min-w-32 overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-(--shadow-raised)",
+          "relative z-(--z-popover) min-w-32 overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-(--shadow-raised)",
           className
         )}
         {...props}
@@ -88,4 +88,26 @@ function SelectItem({
   )
 }
 
-export { Select, SelectValue, SelectTrigger, SelectContent, SelectItem }
+/**
+ * A group of options with an optional label (SelectLabel). Radix names the group by its label, so a screen reader hears
+ * the group's name when focus enters it.
+ */
+function SelectGroup({ ...props }: React.ComponentProps<typeof SelectPrimitive.Group>) {
+  return <SelectPrimitive.Group data-slot="select-group" {...props} />
+}
+
+/** A group's caption (2026-10-10; the DropdownMenu's `esg-menu__label`): `caption` in `ink-secondary`, not an option. */
+function SelectLabel({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Label>) {
+  return <SelectPrimitive.Label data-slot="select-label" className={cn("px-2 pt-2 pb-1 text-caption text-ink-secondary", className)} {...props} />
+}
+
+/**
+ * A hairline between groups of options (2026-10-10; the DropdownMenu's separator, `esg-menu__divider`): a `border`
+ * hairline with `space-8` above and below, edge to edge across the list. Decorative: Radix renders it `aria-hidden`, and
+ * the arrow keys skip it. Use it to set apart an option that is not one of the list's values, such as "Reset to my real role".
+ */
+function SelectSeparator({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Separator>) {
+  return <SelectPrimitive.Separator data-slot="select-separator" className={cn("-mx-1 my-2 h-0 border-t border-border", className)} {...props} />
+}
+
+export { Select, SelectValue, SelectTrigger, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectSeparator }

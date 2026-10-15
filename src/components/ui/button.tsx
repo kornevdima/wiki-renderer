@@ -2,6 +2,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { Slot } from "radix-ui"
+import { HIT_AREA_COARSE_CLASS } from "@/components/ui/hit-area"
 
 // US-174 (NFR-013, FR-049; ADR-019): the ESG button states, every value from a token in globals.css. Filled buttons lift with
 // shadow-button / -hover / -active and darken with a shade over the fill (hover = shade-hover, pressed = shade-active); the
@@ -13,6 +14,8 @@ const FILLED =
 const LIFT = "shadow-(--shadow-button) not-disabled:hover:shadow-(--shadow-button-hover)"
 const LIFT_SM = "shadow-none not-disabled:hover:shadow-(--shadow-button)"
 const FILLED_VARIANTS = ["default", "solid", "brand", "danger"] as const
+const ICON_SIZES = ["icon", "icon-xs", "icon-sm", "icon-lg"] as const
+const SMALL_TEXT_SIZES = ["xs", "sm"] as const
 const NOT_SM = ["default", "xs", "lg", "icon", "icon-xs", "icon-sm", "icon-lg"] as const
 // The filled variants carry no border (BUG-036, the mockup's .esg-btn{border:0}): the fill reaches the edge. Border and
 // bg-clip-padding live only on the variants that draw or reserve an edge, so no filled variant has to cancel them.
@@ -57,6 +60,9 @@ const buttonVariants = cva(
       { variant: [...FILLED_VARIANTS], size: [...NOT_SM], className: LIFT },
       { variant: [...FILLED_VARIANTS], size: "sm", className: LIFT_SM },
       // US-209 (BUG-041): the gradient label is `label-large` (18.67/24 bold, the 14pt-bold large-text threshold), so the 3:1 bar applies to it on the gradient.
+      // R2 (2026-10-12): an icon button is 24 to 36px; under a coarse pointer its hit area grows to 44px, its look unchanged.
+      // Owner, ruled 2026-10-12: the xs (24px) and sm (40px) text buttons too, and so Pagination's step buttons (outline sm).
+      { size: [...ICON_SIZES, ...SMALL_TEXT_SIZES], className: HIT_AREA_COARSE_CLASS },
       { variant: "brand", size: "lg", className: "text-label-large" },
     ],
     defaultVariants: {

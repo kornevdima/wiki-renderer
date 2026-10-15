@@ -1,3 +1,5 @@
+import { HIT_AREA_COARSE_CLASS } from "@/components/ui/hit-area"
+
 export const VIEWPORT_CLASS =
   "fixed right-6 bottom-6 z-(--z-toast) m-0 flex w-[min(400px,calc(100vw-2rem))] list-none flex-col gap-3 p-0 outline-none pointer-events-none"
 export const TOAST_CLASS =
@@ -9,7 +11,8 @@ export const BODY_CLASS = "grid min-w-0 gap-1"
 export const TITLE_CLASS = "m-0 text-base leading-6 font-bold text-foreground"
 export const TEXT_CLASS = "m-0 text-sm leading-5 font-normal text-muted-foreground"
 export const CLOSE_CLASS =
-  "-mt-1 -mr-1 inline-flex size-8 items-center justify-center rounded-(--ds-radius-md) border-0 bg-transparent p-0 text-muted-foreground hover:bg-hover-overlay hover:text-foreground motion-safe:transition-colors motion-safe:duration-(--duration-fast)"
+  "-mt-1 -mr-1 inline-flex size-8 items-center justify-center rounded-(--ds-radius-md) border-0 bg-transparent p-0 text-muted-foreground hover:bg-hover-overlay hover:text-foreground motion-safe:transition-colors motion-safe:duration-(--duration-fast) " +
+  HIT_AREA_COARSE_CLASS
 export const VARIANT_ICON_CLASS = {
   neutral: "text-info",
   success: "text-success",

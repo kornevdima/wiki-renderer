@@ -1,0 +1,67 @@
+.esg-rte.esg-rte {
+  /* next/font's families, as the theme's font-sans / font-mono stacks use them (a var can't refer to itself). */
+  --font-body: var(--font-figtree), system-ui, sans-serif;
+  --font-mono: var(--font-lilex), ui-monospace, monospace;
+  --radius-base: var(--ds-radius-sm);
+  --radius-medium: var(--ds-radius-md);
+
+  --basePageBg: var(--surface);
+  --baseBase: var(--surface);
+  --baseBgSubtle: var(--surface-muted);
+  --baseBg: var(--surface-muted);
+  --baseBgHover: var(--shade-hover);
+  --baseBgActive: var(--shade-active);
+  --baseLine: var(--border);
+  --baseBorder: var(--border);
+  --baseBorderHover: var(--border-hover);
+  --baseSolid: var(--ink-muted);
+  --baseSolidHover: var(--ink-secondary);
+  --baseText: var(--ink-secondary);
+  --baseTextContrast: var(--ink);
+
+  --accentBase: var(--surface);
+  --accentBgSubtle: var(--surface-selected);
+  --accentBg: var(--surface-selected);
+  --accentBgHover: var(--surface-selected);
+  --accentBgActive: var(--surface-selected);
+  --accentLine: var(--accent-border);
+  --accentBorder: var(--accent-border);
+  --accentBorderHover: var(--primary);
+  --accentSolid: var(--primary);
+  --accentSolidHover: var(--primary);
+  --accentText: var(--primary-text);
+  --accentTextContrast: var(--ink);
+
+  color: var(--ink);
+}
+
+/* The frame: the TextField box (border hairline, radius-md), the focus ring when anything inside has keyboard focus. */
+.esg-rte.esg-rte.mdxeditor {
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--ds-radius-md);
+  background-color: var(--surface);
+}
+
+.esg-rte.esg-rte.mdxeditor:focus-within {
+  border-color: var(--border-hover);
+}
+
+/*
+ * The toolbar (ours since v49, rich-text-toolbar.tsx) sits on surface-muted with a hairline under it, square at the bottom
+ * where it meets the content. Its controls are design-system components and bring their own sizes and focus ring.
+ */
+.esg-rte.esg-rte .esg-rte__toolbar {
+  border-radius: var(--ds-radius-md) var(--ds-radius-md) 0 0;
+  border-bottom: var(--border-hairline) solid var(--border);
+  background-color: var(--surface-muted);
+}
+
+.esg-rte.esg-rte .esg-rte__content {
+  min-height: calc(var(--control-h-s) * 5);
+  color: var(--ink);
+}
+
+.esg-rte.esg-rte .esg-rte__content a {
+  color: var(--primary-text);
+}
+

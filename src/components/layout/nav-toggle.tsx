@@ -3,6 +3,9 @@
 import { MenuIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { HIT_AREA_COARSE_CLASS } from "@/components/ui/hit-area";
+import { cn } from "@/lib/utils";
+
 import { APP_NAV_ID, useAppShell } from "./app-shell";
 
 /**
@@ -23,7 +26,10 @@ export function NavToggle() {
       aria-expanded={open}
       aria-controls={APP_NAV_ID}
       onClick={toggle}
-      className="inline-flex size-(--control-h-m) flex-none items-center justify-center rounded-(--ds-radius-md) text-foreground transition-[background-color] duration-(--duration-fast) ease-standard hover:bg-hover-overlay motion-reduce:transition-none lg:hidden"
+      className={cn(
+        "inline-flex size-(--control-h-m) flex-none items-center justify-center rounded-(--ds-radius-md) text-foreground transition-[background-color] duration-(--duration-fast) ease-standard hover:bg-hover-overlay motion-reduce:transition-none lg:hidden",
+        HIT_AREA_COARSE_CLASS,
+      )}
     >
       <MenuIcon aria-hidden="true" className="size-(--icon-control)" />
     </button>
