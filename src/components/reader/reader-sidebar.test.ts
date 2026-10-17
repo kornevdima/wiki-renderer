@@ -25,25 +25,21 @@ function render(wiki: ReaderWiki = WIKI, tree: NavNode[] = TREE): string {
 }
 
 describe("ReaderSidebar", () => {
-  it("lists, top to bottom: the brand, All wikis, the wiki name, the tree, the Language select", () => {
+  it("lists, top to bottom: the brand, All wikis, the wiki name, the tree", () => {
     const out = render();
-    const order = ['data-testid="brand"', 'data-testid="reader-all-wikis"', 'data-testid="reader-wiki-name"', 'data-testid="reader-nav"', 'data-testid="locale-switcher"'].map((id) => out.indexOf(id));
+    const order = ['data-testid="brand"', 'data-testid="reader-all-wikis"', 'data-testid="reader-wiki-name"', 'data-testid="reader-nav"'].map((id) => out.indexOf(id));
     expect(order.every((index) => index >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
     expect(out).toContain("Wiki Renderer");
     expect(out).toContain(">WR</span>");
     expect(out).toContain(">Wikis</span>");
-    // US-212 R12: the select leads with the globe glyph and is the chrome's 40px (`control-h-m`) height.
-    expect(out).toMatch(/>Language <span class="relative block">.*lucide-globe.*<select id="locale-switcher-select"[^>]*min-h-\(--control-h-m\)/);
     expect(out).toContain("Team guide");
   });
 
-  it("All wikis goes to / and there is no wiki switcher: the select is the one English-only Language select", () => {
+  it("All wikis goes to / and there is no wiki switcher and no select: the Language choice lives in the settings menu (US-286)", () => {
     const out = render();
     expect(out).toMatch(/<a [^>]*data-testid="reader-all-wikis"[^>]*href="\/"|<a [^>]*href="\/"[^>]*data-testid="reader-all-wikis"/);
-    expect(out.match(/<select\b/g)).toHaveLength(1);
-    expect(out.match(/<option\b/g)).toHaveLength(1);
-    expect(out).not.toMatch(/<form|role="combobox"|listbox/);
+    expect(out).not.toMatch(/<select|<option|<form|role="combobox"|listbox|locale-switcher|Language/);
   });
 
   it("shows the folder under the name, above the tree", () => {
@@ -57,10 +53,9 @@ describe("ReaderSidebar", () => {
     expect(render({ name: "Team guide" })).not.toContain("reader-wiki-folder");
   });
 
-  it("an empty tree renders no nav, and the Language select is still in the foot", () => {
+  it("an empty tree renders no nav", () => {
     const out = render(WIKI, []);
     expect(out).not.toContain("<nav");
-    expect(out).toContain('data-testid="locale-switcher"');
   });
 
   it("is hidden in print", () => {

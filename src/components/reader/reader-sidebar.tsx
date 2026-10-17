@@ -1,9 +1,8 @@
-import { ArrowLeftIcon, BookIcon, GlobeIcon } from "lucide-react";
+import { ArrowLeftIcon, BookIcon } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { Brand } from "@/components/layout/brand";
-import { LocaleSwitcher } from "@/components/locale-switcher";
 import type { NavNode } from "@/content/runtime/types";
 
 import { NavClose } from "./nav-close";
@@ -15,7 +14,7 @@ import { brandProps } from "@/components/brand-props";
  * The reader's sidebar (US-187, FR-052, FR-030, FR-031; reader mockup state 1), the content of the `AppShell`'s sidebar slot
  * and of its off-canvas drawer below `bp-lg`. Top to bottom: the brand, "All wikis" with an arrow (to `/`, US-096: the only
  * way to another wiki, there is no switcher), the wiki's name with a book icon, then, the
- * folder the wiki is read from, then the page tree, then the Language select with its visible label in the foot (English only, US-098).
+ * folder the wiki is read from, then the page tree.
  *
  * A server component with no script of its own.
  */
@@ -29,7 +28,6 @@ export interface ReaderSidebarProps {
 export function ReaderSidebar({ wikiId, wiki, tree, activePath }: ReaderSidebarProps) {
   const t = useTranslations("readerShell");
   const tBrand = useTranslations("brand");
-  const tLocale = useTranslations("localeSwitcher");
   return (
     <div data-testid="reader-sidebar" className="flex h-full min-h-0 flex-col bg-muted text-foreground print:hidden">
       <div className="relative flex h-(--topbar-h) flex-none items-center px-6">
@@ -58,14 +56,6 @@ export function ReaderSidebar({ wikiId, wiki, tree, activePath }: ReaderSidebarP
       </div>
       <div data-testid="reader-nav-column" className="flex min-h-0 flex-1 flex-col">
         {tree.length > 0 ? <NavTree wikiId={wikiId} tree={tree} activePath={activePath} /> : null}
-      </div>
-      <div className="flex-none border-t border-border p-4">
-        <LocaleSwitcher
-          label={tLocale("label")}
-          optionLabels={{ en: tLocale("en") }}
-          className="grid gap-1 text-sm/5 text-muted-foreground [&_select]:w-full [&_select]:min-w-0"
-          icon={<GlobeIcon />}
-        />
       </div>
     </div>
   );

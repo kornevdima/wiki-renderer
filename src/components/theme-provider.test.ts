@@ -1,6 +1,6 @@
 /**
- * Component and wiring specs for the theme control (US-172). The behaviour in a browser (popover, keyboard, cookie,
- * first paint) is the e2e spec `tests/e2e/theme.spec.ts`; this pins the server-rendered shape and the layout's wiring.
+ * Specs for the theme provider (US-172) and its settings-menu wiring (US-286). The behaviour in a browser (menu, keyboard, cookie,
+ * first paint) is e2e; this pins the provider, the copy and the wiring.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -26,7 +26,7 @@ vi.mock("react", async (importOriginal) => {
 });
 
 import messages from "../../messages/en.json";
-import { ThemeControl, ThemeProvider, ThemeSelect, useTheme, type ThemeState } from "./theme-control";
+import { ThemeProvider, useTheme, type ThemeState } from "./theme-provider";
 import type { ThemeChoice } from "../lib/theme";
 
 const read = (relative: string) => readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -41,28 +41,9 @@ function html(element: ReactElement, choice: ThemeChoice): string {
   );
 }
 
-describe("US-172 theme control, server-rendered", () => {
-  it("the app button is named for the stored choice", () => {
-    for (const choice of ["light", "dark", "system"] as const) {
-      expect(html(createElement(ThemeControl), choice)).toContain(`aria-label="Theme: ${choice}"`);
-    }
-  });
-
-  it("the icon follows the choice: sun, moon, monitor", () => {
-    expect(html(createElement(ThemeControl), "light")).toContain("lucide-sun");
-    expect(html(createElement(ThemeControl), "dark")).toContain("lucide-moon");
-    expect(html(createElement(ThemeControl), "system")).toContain("lucide-monitor");
-  });
-
-  it("the reader select is named Theme and shows the stored choice's label", () => {
-    const out = html(createElement(ThemeSelect), "dark");
-    expect(out).toContain('aria-label="Theme"');
-    expect(out).toContain("lucide-moon");
-    expect(out).toContain(">Dark</span>");
-  });
-
+describe("US-172 theme copy and wiring", () => {
   it("the copy is exactly the accepted strings", () => {
-    expect(messages.theme).toEqual({ label: "Theme", buttonLabel: "Theme: {value}", light: "Light", dark: "Dark", system: "System" });
+    expect(messages.theme).toEqual({ label: "Theme", light: "Light", dark: "Dark", system: "System" });
   });
 
   it("the root layout reads the cookie on the server and carries no inline script", () => {
@@ -72,10 +53,14 @@ describe("US-172 theme control, server-rendered", () => {
     expect(layout).not.toMatch(/<script|dangerouslySetInnerHTML/);
   });
 
-  it("the control is mounted in the home topbar and the reader header, and not on the 404", () => {
-    expect(read("../app/page.tsx")).toContain("<ThemeControl />");
-    expect(read("./reader/page-shell.tsx")).toContain("<ThemeSelect />");
-    expect(read("../app/not-found.tsx")).not.toMatch(/Theme(Control|Select)/);
+  it("the settings menu is mounted in the home topbar and the reader topbar, feeds the menu from useTheme, and the old controls are gone", () => {
+    expect(read("../app/page.tsx")).toContain("<AppSettingsMenu />");
+    expect(read("./reader/page-shell.tsx")).toContain("<AppSettingsMenu />");
+    expect(read("./app-settings-menu.tsx")).toMatch(/useTheme\(\)[\s\S]*onValueChange: set/);
+    expect(read("../app/not-found.tsx")).not.toMatch(/Theme(Control|Select)|AppSettingsMenu/);
+    for (const file of ["../app/page.tsx", "./reader/page-shell.tsx", "./reader/reader-sidebar.tsx"]) {
+      expect(read(file)).not.toMatch(/ThemeControl|ThemeSelect|LocaleSwitcher/);
+    }
   });
 });
 
@@ -97,12 +82,13 @@ describe("US-172 the provider owns the choice", () => {
         return null;
       };
       // First page: the layout renders "system"; the viewer picks Dark.
-      expect(html(createElement("div", null, createElement(Probe), createElement(ThemeControl)), "system")).toContain("Theme: system");
+      expect(html(createElement(Probe), "system")).toBe("");
+      expect((state as ThemeState).choice).toBe("system");
       (state as ThemeState).set("dark");
       expect(written.theme, "applyTheme ran").toBe("dark");
-      // A soft navigation mounts a different control under the same provider; the layout still says "system".
-      expect(html(createElement(ThemeControl), "system")).toContain("Theme: dark");
-      expect(html(createElement(ThemeSelect), "system")).toContain(">Dark</span>");
+      // A soft navigation mounts a different consumer under the same provider; the layout still says "system".
+      html(createElement(Probe), "system");
+      expect((state as ThemeState).choice).toBe("dark");
     } finally {
       shared.on = false;
       vi.unstubAllGlobals();

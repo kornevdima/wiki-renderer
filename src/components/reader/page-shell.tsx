@@ -9,7 +9,7 @@ import type { FrontmatterField, OutlineEntry } from "@/content/render/types";
 import type { NavNode } from "@/content/runtime/types";
 
 import { PageWidthHandle } from "@/components/page-width-control";
-import { ThemeSelect } from "@/components/theme-control";
+import { AppSettingsMenu } from "@/components/app-settings-menu";
 
 import { AllProperties } from "./all-properties";
 import { HeadingAnchorCopy } from "./heading-anchor-copy";
@@ -25,8 +25,7 @@ import { StaleNotice } from "./stale-notice";
 
 /**
  * The reader shell (SA-MOD Reader UI and print §3, Amendment A2; US-158, US-187). The layout kit's `AppShell` (US-176) with the
- * reader's sidebar (`ReaderSidebar`: brand, the one WIKI control "All wikis" to `/`, the wiki name, the tree, the Language
- * select) and a topbar holding the menu button below `bp-lg`, the Search trigger (US-091, S7-R1) and the theme select. There is
+ * reader's sidebar (`ReaderSidebar`: brand, the one WIKI control "All wikis" to `/`, the wiki name, the tree) and a topbar holding the menu button below `bp-lg`, the Search trigger (US-091, S7-R1) and the settings menu (theme and language, US-286). There is
  * no wiki switcher (`wiki-switcher-pin.test.ts`). The page's one `main` is the article; the page rail (`aside`, "Page details") stays beside it.
  *
  * The A2 prop `stale` (wave 8) puts the stale notice above the article. The A2 props `tree` and `activePath` (wave 9, US-097)
@@ -120,7 +119,7 @@ export function PageShell({ wikiId, wiki, sha, tree, activePath, pageTitle, stal
             </>
           }
         >
-          <ThemeSelect />
+          <AppSettingsMenu />
         </Topbar>
       }
     >

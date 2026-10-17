@@ -147,10 +147,12 @@
   },
   "theme": {
     "label": "Theme",
-    "buttonLabel": "Theme: {value}",
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "settingsMenu": {
+    "label": "Settings"
   },
   "localeSwitcher": {
     "label": "Language",

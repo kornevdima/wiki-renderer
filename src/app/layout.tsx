@@ -7,7 +7,7 @@ import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { SkipLink } from "@/components/layout/skip-link";
 import { NonceBridge } from "@/components/nonce-bridge";
 import { PageWidthProvider } from "@/components/page-width-control";
-import { ThemeProvider } from "@/components/theme-control";
+import { ThemeProvider } from "@/components/theme-provider";
 import { fontVariableClasses } from "@/fonts";
 import { branding } from "@/lib/branding";
 import { documentWidth, PAGE_WIDTH_COOKIE, parsePageWidth } from "@/lib/page-width";

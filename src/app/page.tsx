@@ -9,9 +9,8 @@ import { Brand } from "@/components/layout/brand";
 import { MAIN_REGION, PAGE_CONTENT_CLASS } from "@/components/layout/main-region";
 import { PageHeader } from "@/components/layout/page-header";
 import { Topbar } from "@/components/layout/topbar";
-import { LocaleSwitcher } from "@/components/locale-switcher";
+import { AppSettingsMenu } from "@/components/app-settings-menu";
 import { documentTitle } from "@/components/reader/document-title";
-import { ThemeControl } from "@/components/theme-control";
 import { listWikis } from "@/content/runtime";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,13 +30,11 @@ export default async function Home() {
   const t = await getTranslations("home");
   const tListing = await getTranslations("homeListing");
   const tBrand = await getTranslations("brand");
-  const tLocale = await getTranslations("localeSwitcher");
 
   return (
     <div data-testid="app-shell">
       <Topbar leading={<Brand {...brandProps({ company: tBrand("company"), product: tBrand("product"), initials: tBrand("initials"), logo: tBrand("logo"), tone: tBrand("tone") })} />}>
-        <LocaleSwitcher label={tLocale("label")} optionLabels={{ en: tLocale("en") }} />
-        <ThemeControl />
+        <AppSettingsMenu />
       </Topbar>
       <main {...MAIN_REGION} className={PAGE_CONTENT_CLASS}>
         <PageHeader title={t("heading")} meta={[{ text: t("tagline") }]} />
