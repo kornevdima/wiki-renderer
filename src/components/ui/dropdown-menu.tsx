@@ -26,10 +26,20 @@ function DropdownMenuTrigger({
   return <DropdownMenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
 }
 
+/**
+ * An open menu is never taller than the room Radix reports (US-285, owner 2026-10-17): the account menu with a Theme group and a
+ * Language group is about 480px, which overran a short phone. It scrolls inside; the 100dvh fallback is for a render outside Radix.
+ */
+const MENU_CONTENT_CLASS =
+  "z-(--z-popover) min-w-55 max-h-(--radix-dropdown-menu-content-available-height,100dvh) overflow-y-auto rounded-(--ds-radius-md) border bg-popover py-2 text-sm text-popover-foreground shadow-(--shadow-raised) outline-none"
+const MENU_SUB_CONTENT_CLASS =
+  "z-(--z-popover) min-w-(--radix-popper-anchor-width) max-w-[calc(100vw-var(--space-16))] max-h-(--radix-dropdown-menu-content-available-height,100dvh) overflow-y-auto rounded-(--ds-radius-md) border bg-popover py-2 text-sm text-popover-foreground shadow-(--shadow-raised) outline-none"
+
 function DropdownMenuContent({
   className,
   align = "end",
   sideOffset = 8,
+  collisionPadding = 8,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
   return (
@@ -38,8 +48,9 @@ function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         align={align}
         sideOffset={sideOffset}
+        collisionPadding={collisionPadding}
         className={cn(
-          "z-(--z-popover) min-w-55 rounded-(--ds-radius-md) border bg-popover py-2 text-sm text-popover-foreground shadow-(--shadow-raised) outline-none",
+          MENU_CONTENT_CLASS,
           className
         )}
         {...props}
@@ -83,6 +94,15 @@ function DropdownMenuSeparator({ className, ...props }: React.ComponentProps<typ
  */
 function DropdownMenuHeader({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="dropdown-menu-header" className={cn("grid px-4 pt-2 pb-3", className)} {...props} />
+}
+
+/**
+ * The label row of an inline choice (owner, ruled 2026-10-16, "Choices inline"; `esg-menu__label`): "Theme" or "Language" above its
+ * `DropdownMenuRadioGroup`, in the phone user menu where a sub-menu would open over Sign out. Not a row: it is not focusable and
+ * not a menu item. Give it an `id` and point the radio group's `aria-labelledby` at it so the group is named.
+ */
+function DropdownMenuLabel({ className, ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Label>) {
+  return <DropdownMenuPrimitive.Label data-slot="dropdown-menu-label" className={cn("px-4 pt-2 pb-0 text-caption text-ink-secondary", className)} {...props} />
 }
 
 /**
@@ -140,7 +160,7 @@ function DropdownMenuSubContent({
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
         className={cn(
-          "z-(--z-popover) min-w-(--radix-popper-anchor-width) max-w-[calc(100vw-var(--space-16))] rounded-(--ds-radius-md) border bg-popover py-2 text-sm text-popover-foreground shadow-(--shadow-raised) outline-none",
+          MENU_SUB_CONTENT_CLASS,
           // Radix opens a sub-menu beside its row and flips it to the left when the right does not fit, which on a 390px screen
           // leaves it half off-screen. When it flips, move it under its row instead, left-aligned with the parent menu.
           "data-[side=left]:translate-x-[calc(100%+var(--space-8)/4)] data-[side=left]:translate-y-(--radix-popper-anchor-height)",
@@ -177,4 +197,4 @@ function DropdownMenuRadioItem({ className, children, ...props }: React.Componen
   )
 }
 
-export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuHeader, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuRadioGroup, DropdownMenuRadioItem }
+export { MENU_CONTENT_CLASS, MENU_SUB_CONTENT_CLASS, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuHeader, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuRadioGroup, DropdownMenuRadioItem }

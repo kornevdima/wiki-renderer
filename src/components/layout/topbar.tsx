@@ -31,6 +31,7 @@ export function Topbar({ leading, children, secondary, actions }: TopbarProps) {
   return (
     <header
       data-testid="app-header"
+      data-slot="topbar"
       className="sticky top-0 z-(--z-shell) flex min-h-(--topbar-h) flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-background px-4 py-2 text-foreground max-md:h-(--topbar-h) max-md:flex-nowrap max-md:py-0 print:hidden lg:px-8"
     >
       {leading}

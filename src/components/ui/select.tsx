@@ -39,6 +39,14 @@ function SelectTrigger({
   )
 }
 
+/**
+ * The open list (US-285, owner 2026-10-17): never taller than the room Radix reports below or above the trigger
+ * (`--radix-select-content-available-height`), so a long list (164 teams) scrolls inside instead of running off the screen.
+ * Applies to `position="popper"` (the default); `item-aligned` does not set the variable. Radix's viewport already scrolls (`overflow: hidden auto`); the cap is what makes it. The 100dvh fallback is for a render outside Radix.
+ */
+const SELECT_CONTENT_CLASS =
+  "relative z-(--z-popover) max-h-(--radix-select-content-available-height,100dvh) min-w-32 overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-(--shadow-raised)"
+
 function SelectContent({
   className,
   children,
@@ -51,7 +59,7 @@ function SelectContent({
         data-slot="select-content"
         position={position}
         className={cn(
-          "relative z-(--z-popover) min-w-32 overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-(--shadow-raised)",
+          SELECT_CONTENT_CLASS,
           className
         )}
         {...props}
@@ -110,4 +118,4 @@ function SelectSeparator({ className, ...props }: React.ComponentProps<typeof Se
   return <SelectPrimitive.Separator data-slot="select-separator" className={cn("-mx-1 my-2 h-0 border-t border-border", className)} {...props} />
 }
 
-export { Select, SelectValue, SelectTrigger, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectSeparator }
+export { SELECT_CONTENT_CLASS, Select, SelectValue, SelectTrigger, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectSeparator }

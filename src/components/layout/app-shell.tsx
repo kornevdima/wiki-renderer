@@ -114,6 +114,7 @@ export function AppShell({ sidebar, topbar, children, testId, dataAttributes, si
           id={APP_NAV_ID}
           ref={sidebarRef}
           data-testid="app-shell-sidebar"
+          data-slot="app-shell-sidebar"
           data-open={nav.open}
           className={SIDEBAR_CLASS}
           onClick={(event) => {

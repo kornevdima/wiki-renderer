@@ -79,7 +79,7 @@ default is never shown. `tools/registry-add.sh ... brand` copies `public/esg-log
 | `src/app/api/wikis/[wikiId]/{asset,source,search-index}/` | the snapshot's files, by sha; `latest-asset/` redirects the editor's image previews to the current sha |
 | `src/app/page.tsx` | the wiki list, or a redirect when only one wiki is configured |
 | `src/components/reader/` | reader UI (shell, sidebar, nav tree, outline, search dialog, PDF, source view, editor: `edit-view.tsx`, `edit-editor.tsx`) |
-| `src/components/ui/`, `src/components/layout/`, `src/app/esg-theme.css`, `src/fonts/` | **installed** from the ESG design-system registry; don't hand-edit. Installed at design system **v49** (2026-10-16, artifact version 114; re-pulled from v34 for the editor's controls). Restore `package.json` and `package-lock.json` after `registry-add.sh` (the CLI loosens exact pins) |
+| `src/components/ui/`, `src/components/layout/`, `src/app/esg-theme.css`, `src/fonts/` | **installed** from the ESG design-system registry; don't hand-edit. Installed at design system **v56** (`esg-design-system` `8cc274f`, not yet published, pulled from the local registry 2026-10-17, US-288; every item re-pulled with `--overwrite`, no forks of design components, operator ruling 2026-10-17). Restore `package.json` and `package-lock.json` after `registry-add.sh` (the CLI loosens exact pins) |
 | `tests/e2e/`, `tests/fixtures/` | Playwright smoke suite and its two sample wikis |
 
 ## Conventions
