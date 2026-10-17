@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/layout/app-shell";
 import { MAIN_REGION } from "@/components/layout/main-region";
 import { NavToggle } from "@/components/layout/nav-toggle";
 import { Topbar } from "@/components/layout/topbar";
@@ -17,6 +16,7 @@ import { OnThisPage } from "./on-this-page";
 import { showsOutline } from "./outline-tree";
 import { PageBar } from "./page-bar";
 import { buildPageCrumbs } from "./page-crumbs";
+import { ReaderAppShell } from "./reader-app-shell";
 import { ReaderSidebar } from "./reader-sidebar";
 import type { ReaderWiki } from "./reader-wiki";
 import { SearchCommandDialog } from "./search-command-dialog";
@@ -106,7 +106,7 @@ export function PageShell({ wikiId, wiki, sha, tree, activePath, pageTitle, stal
   };
 
   return (
-    <AppShell
+    <ReaderAppShell
       testId="reader-shell"
       dataAttributes={{ "data-wiki-id": wikiId }}
       sidebar={<ReaderSidebar wikiId={wikiId} wiki={wiki} tree={tree} activePath={activePath} />}
@@ -156,6 +156,6 @@ export function PageShell({ wikiId, wiki, sha, tree, activePath, pageTitle, stal
         {hasAnchors ? <HeadingAnchorCopy /> : null}
         {hasToc ? <SectionSpy pageKey={activePath ?? ""} ids={outline.map((entry) => entry.id)} /> : null}
       </div>
-    </AppShell>
+    </ReaderAppShell>
   );
 }

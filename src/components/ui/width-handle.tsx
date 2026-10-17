@@ -12,6 +12,7 @@ import {
   defaultValueText,
   estimateChipWidth,
   guideAt,
+  intersectRoom,
   markerOffsets,
   nextGuide,
   gripSegment,
@@ -20,11 +21,13 @@ import {
   placeTopLabels,
   prevGuide,
   snapWidth,
+  startDrag,
   stepWidth,
+  syncDrag,
   visibleGuides,
   widthFromDrag,
 } from "@/components/ui/width-handle-model"
-import type { Available, GripGeometry, WidthGuide } from "@/components/ui/width-handle-model"
+import type { Available, DragState, GripGeometry, WidthGuide } from "@/components/ui/width-handle-model"
 
 /**
  * The design system's WidthHandle (`project/components/WidthHandle`, added 2026-10-17 for the wiki renderer's page width, US-280):
@@ -67,6 +70,13 @@ type WidthHandleProps = {
   labelsAt?: "top" | "grip"
   /** Draw the mirrored guide lines on the column's start side. Default: `symmetric` (a column anchored at its left edge has none). */
   startMarkers?: boolean
+  /**
+   * The room the guide labels and the readout may use, when the viewport is too wide (a side panel beside the column). Either an
+   * element (a ref to it: its bounding box is read each time the guides are measured) or a `{ left, right }` range in viewport px
+   * (`getBoundingClientRect` coordinates). It narrows the measured room (viewport and clipping ancestors); a chip that would leave
+   * it flips or is clamped inside. Absent: unchanged.
+   */
+  labelRoom?: React.RefObject<HTMLElement | null> | Available
   /** The handle is on the right edge. Only "end" exists. */
   side?: "end"
   /** The column is centred, so a drag of dx changes the width by 2·dx and guides show on both sides. Default true. */
@@ -84,7 +94,7 @@ const CHIP =
  * The room chips have, in px from the root's left edge: the viewport, narrowed by every ancestor that clips horizontally.
  * Undefined where nothing can be measured (no layout, as in a test DOM).
  */
-function measureAvailable(root: HTMLElement | null): Available | undefined {
+function measureAvailable(root: HTMLElement | null, labelRoom?: WidthHandleProps["labelRoom"]): Available | undefined {
   if (!root || typeof window === "undefined") return undefined
   const origin = root.getBoundingClientRect().left
   let left = 0
@@ -95,7 +105,16 @@ function measureAvailable(root: HTMLElement | null): Available | undefined {
     left = Math.max(left, r.left)
     right = Math.min(right, r.right)
   }
-  return right > left ? { left: left - origin, right: right - origin } : undefined
+  const measured = right > left ? { left, right } : undefined
+  let room: Available | undefined
+  if (labelRoom) {
+    if ("current" in labelRoom) {
+      const r = labelRoom.current?.getBoundingClientRect()
+      room = r ? { left: r.left, right: r.right } : undefined
+    } else room = labelRoom
+  }
+  const joined = intersectRoom(measured, room)
+  return joined ? { left: joined.left - origin, right: joined.right - origin } : undefined
 }
 
 // Styling only: a pointer drag shows the same ring as keyboard focus (the theme ring's colour, width and offset, from its base rule); mouse focus is not :focus-visible, so nothing else applies to it.
@@ -124,12 +143,14 @@ function WidthHandle({
   symmetric = true,
   labelsAt = "top",
   startMarkers = symmetric,
+  labelRoom,
   className,
 }: WidthHandleProps) {
   const [dragging, setDragging] = React.useState(false)
   // Guides show while dragging, and while the grip matches :focus-visible (keyboard focus, or a key press); never on any focus.
   const [keyboard, setKeyboard] = React.useState(false)
-  const drag = React.useRef<{ startX: number; startWidth: number } | null>(null)
+  const drag = React.useRef<DragState | null>(null)
+  const pointerX = React.useRef(0)
   const latest = React.useRef<{ px: number; guideId: string | null }>({ px: value, guideId: null })
 
   const shown = React.useMemo(() => visibleGuides(guides, min, max), [guides, min, max])
@@ -147,7 +168,7 @@ function WidthHandle({
   // Measured when the guides show, whenever the column moves and while the page scrolls or resizes (a host may make the grip sticky):
   // the room the chips have (viewport and scroll containers) and where the grip's bar is.
   const measure = React.useCallback(() => {
-    const nextAvailable = measureAvailable(rootRef.current)
+    const nextAvailable = measureAvailable(rootRef.current, labelRoom)
     setAvailable((prev) => (prev?.left === nextAvailable?.left && prev?.right === nextAvailable?.right ? prev : nextAvailable))
     const root = rootRef.current?.getBoundingClientRect()
     const grip = gripRef.current?.getBoundingClientRect()
@@ -155,11 +176,11 @@ function WidthHandle({
     if (!root || !grip || !bar) return
     const next = { barY: bar.top + bar.height / 2 - root.top, gripTop: grip.top - root.top, gripBottom: grip.bottom - root.top, columnHeight: root.height }
     setGeometry((prev) => (prev.barY === next.barY && prev.gripTop === next.gripTop && prev.gripBottom === next.gripBottom && prev.columnHeight === next.columnHeight ? prev : next))
-  }, [])
+  }, [labelRoom])
   React.useLayoutEffect(() => {
     if (!active) return
     measure()
-  }, [active, current, labelsAt, guides, measure])
+  }, [active, current, labelsAt, guides, labelRoom, measure])
   React.useEffect(() => {
     if (!active) return
     window.addEventListener("scroll", measure, true)
@@ -198,16 +219,52 @@ function WidthHandle({
     // text selection is stopped by select-none and touch-none on the grip.
     setKeyboard(false)
     e.currentTarget.setPointerCapture?.(e.pointerId)
-    drag.current = { startX: e.clientX, startWidth: current }
+    pointerX.current = e.clientX
     latest.current = { px: current, guideId: snapped?.id ?? null }
+    drag.current = startDrag(e.clientX, current, sampleColumn())
     setDragging(true)
   }
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const d = drag.current
+  // Where the rendered column's grip is (its right edge) and how wide it is, or null where there is no layout or the app has not
+  // rendered the last width yet (a stale measurement must not read as the column moving).
+  const sampleColumn = () => {
+    const r = rootRef.current?.getBoundingClientRect()
+    if (!r || !(r.width > 0)) return null
+    return { gripX: r.right, width: r.width }
+  }
+  // Follow the pointer; first re-anchor the drag if the column moved under it (see syncDrag).
+  const followPointer = (clientX: number) => {
+    let d = drag.current
     if (!d) return
-    const next = snapWidth(widthFromDrag(d.startWidth, e.clientX - d.startX, symmetric), min, max, shown, snapPx)
+    const sample = sampleColumn()
+    if (sample && Math.abs(sample.width - latest.current.px) <= 1) {
+      d = syncDrag(d, sample, latest.current.px, symmetric).state
+      drag.current = d
+    }
+    const next = snapWidth(widthFromDrag(d.startWidth, clientX - d.startX, symmetric), min, max, shown, snapPx)
     if (next.px !== latest.current.px || next.guideId !== latest.current.guideId) emit(next.px, next.guideId)
   }
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    pointerX.current = e.clientX
+    followPointer(e.clientX)
+  }
+  // A column can move with the pointer held still (a sidebar collapsing): re-check when the column's surroundings resize.
+  const followRef = React.useRef(followPointer)
+  React.useEffect(() => {
+    followRef.current = followPointer
+  })
+  React.useEffect(() => {
+    if (!dragging || typeof ResizeObserver === "undefined") return
+    const root = rootRef.current
+    if (!root) return
+    const observer = new ResizeObserver(() => {
+      followRef.current(pointerX.current)
+      measure()
+    })
+    observer.observe(root)
+    if (root.parentElement) observer.observe(root.parentElement)
+    observer.observe(document.documentElement)
+    return () => observer.disconnect()
+  }, [dragging, measure])
   const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!drag.current) return
     drag.current = null

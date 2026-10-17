@@ -7,10 +7,12 @@ import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { SkipLink } from "@/components/layout/skip-link";
 import { NonceBridge } from "@/components/nonce-bridge";
 import { PageWidthProvider } from "@/components/page-width-control";
+import { SidebarStateProvider } from "@/components/sidebar-state";
 import { ThemeProvider } from "@/components/theme-provider";
 import { fontVariableClasses } from "@/fonts";
 import { branding } from "@/lib/branding";
 import { documentWidth, PAGE_WIDTH_COOKIE, parsePageWidth } from "@/lib/page-width";
+import { parseSidebarCollapsed, SIDEBAR_COOKIE } from "@/lib/sidebar";
 import { parseTheme, themeAttribute, THEME_COOKIE } from "@/lib/theme";
 
 import "./globals.css";
@@ -58,6 +60,9 @@ export default async function RootLayout({
   const width = documentWidth(pageWidth);
   const htmlStyle = width.px === undefined ? undefined : ({ "--wr-page-px": width.px } as React.CSSProperties);
 
+  // The stored sidebar state (US-281): a `wr-sidebar` cookie, read here so the first HTML already has the collapsed or expanded column.
+  const sidebarCollapsed = parseSidebarCollapsed(cookieStore.get(SIDEBAR_COOKIE)?.value);
+
   return (
     <html lang={locale} className={fontVariableClasses} data-theme={themeAttribute(theme)} data-page-width={width.attribute} style={htmlStyle}>
       <body>
@@ -66,7 +71,9 @@ export default async function RootLayout({
         <NonceBridge nonce={nonce} />
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider choice={theme}>
-            <PageWidthProvider choice={pageWidth}>{children}</PageWidthProvider>
+            <PageWidthProvider choice={pageWidth}>
+              <SidebarStateProvider collapsed={sidebarCollapsed}>{children}</SidebarStateProvider>
+            </PageWidthProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>

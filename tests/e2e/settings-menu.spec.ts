@@ -111,9 +111,9 @@ test.describe("US-286 settings menu", () => {
       await expect(page.getByRole("menuitemradio").first()).toBeFocused();
       const first = await page.evaluate(() => document.activeElement?.getAttribute("data-testid"));
       await page.keyboard.press("ArrowDown");
-      const second = await page.evaluate(() => document.activeElement?.getAttribute("data-testid"));
-      expect(second).toBeTruthy();
-      expect(second).not.toBe(first);
+      // The roving focus moves on the next frame: poll it rather than read it at once.
+      await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute("data-testid"))).not.toBe(first);
+      expect(await page.evaluate(() => document.activeElement?.getAttribute("data-testid"))).toBeTruthy();
       await page.keyboard.press("ArrowUp");
       await expect(page.getByRole("menuitemradio").first()).toBeFocused();
       await page.keyboard.press("Escape");

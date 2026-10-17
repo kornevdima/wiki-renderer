@@ -60,7 +60,7 @@ describe("PageShell mounts (US-219, E3-D5)", () => {
     expect(out.match(/data-testid="toc-rail"/g)).toHaveLength(1);
     expect(out.indexOf('data-testid="toc-rail"')).toBeLessThan(out.indexOf('data-testid="frontmatter-panel"'));
     expect(out.indexOf('data-testid="reader-content"')).toBeLessThan(out.indexOf('data-testid="reader-rail"'));
-    expect(out.match(/<aside/g)).toHaveLength(1);
+    expect(out.match(/<aside aria-label="Page details"/g)).toHaveLength(1);
     expect(out.match(/data-testid="anchor-status"/g)).toHaveLength(1);
     expect(out).toContain('role="status" aria-live="polite"');
     expect(out).toContain("wr-layout wr-layout--aside");

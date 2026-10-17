@@ -3,19 +3,19 @@
 import { useTranslations } from "next-intl";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 
+import { useSidebarState } from "@/components/sidebar-state";
 import { Button } from "@/components/ui/button";
 import { WidthHandle } from "@/components/ui/width-handle";
 import {
   READING,
   applyPageWidth,
   buildGuides,
-  choiceFromHandle,
   acceptMetrics,
-  choiceToPx,
   resetTakesFocus,
   serializePageWidthCookie,
   type PageWidthChoice,
 } from "@/lib/page-width";
+import { a4IdOf, farGuide, handleMax, handleValue, resolveWidth, shouldAutoCollapse } from "@/lib/sidebar";
 
 /**
  * The reader's page width (US-280). `PageWidthProvider` (root layout) owns the choice the server read from the `wr-page-width`
@@ -107,6 +107,7 @@ export function PageWidthHandle({ copy }: { copy: PageWidthCopy }) {
   const { choice, preview, commit, reset } = usePageWidth();
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const host = useRef<HTMLDivElement>(null);
+  const room = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const anchor = host.current;
@@ -134,25 +135,70 @@ export function PageWidthHandle({ copy }: { copy: PageWidthCopy }) {
     };
   }, []);
 
+  // The A4 guide the drag is snapped to now (US-281, "Drag snaps to landscape"); null when none or when not dragging.
+  const [snapId, setSnapId] = useState<string | null>(null);
+  // "Panel stays, page narrows" (US-281): the readout is the page's real width, held to the room beside the side panel.
+  const value = metrics ? handleValue(choice, metrics.readingPx, metrics.fullPx, snapId) : 0;
+  const { collapsed, previewCollapsed, setCollapsed } = useSidebarState();
+  // US-281 R4c. The drag collapses the sidebar live when it reaches an A4 guide the expanded room cannot hold, and expands it again if
+  // the drag goes back, but only a collapse this drag made (`byDrag`); the cookie is written on commit alone. The decisions' ground is the
+  // expanded room, remembered while the sidebar is expanded, so a live collapse does not change which guide is the far end.
+  const expanded = useRef<{ room: number; full: number } | null>(null);
+  const byDrag = useRef(false);
+  useEffect(() => {
+    if (metrics && !collapsed) expanded.current = { room: metrics.maxPx, full: metrics.fullPx };
+  }, [metrics, collapsed]);
   const guides = useMemo(() => (metrics ? buildGuides(metrics.readingPx, metrics.fullPx, copy) : []), [metrics, copy]);
-  const value = metrics ? choiceToPx(choice, metrics.readingPx, metrics.fullPx) : 0;
+  const ground = (m: Metrics) => (byDrag.current && expanded.current ? expanded.current : { room: m.maxPx, full: m.fullPx });
+  const resolve = (m: Metrics, px: number, id: string | null): PageWidthChoice => {
+    const g = ground(m);
+    return resolveWidth(px, id, g.full, farGuide(guides, g.full));
+  };
+  const wantsCollapse = (m: Metrics, next: PageWidthChoice) => shouldAutoCollapse(next, ground(m).room, m.maxPx - m.fullPx, false);
+  const onDragChange = (m: Metrics, px: number, id: string | null) => {
+    const next = resolve(m, px, id);
+    setSnapId(a4IdOf(next));
+    preview(next);
+    if (wantsCollapse(m, next)) {
+      if (!collapsed && !byDrag.current) {
+        byDrag.current = true;
+        previewCollapsed(true);
+      }
+    } else if (byDrag.current) {
+      byDrag.current = false;
+      previewCollapsed(false);
+    }
+  };
+  // Release (or a cancelled drag, which the handle also reports here): the width is stored, and the collapse with it only when it is wanted.
+  const onDragCommit = (m: Metrics, px: number, id: string | null) => {
+    setSnapId(null);
+    const next = resolve(m, px, id);
+    const want = wantsCollapse(m, next);
+    const liveCollapse = byDrag.current;
+    byDrag.current = false;
+    commit(next);
+    if (want) setCollapsed(true);
+    else if (liveCollapse) previewCollapsed(false); // a collapse made live by this drag that is no longer wanted; one made by hand stays
+  };
   return (
     <div ref={host} className="wr-width-track" data-testid="page-width-host">
       <span aria-hidden="true" className="wr-width-probe" data-width-probe />
       <span aria-hidden="true" className="wr-width-probe wr-width-probe--extra" data-width-extra-probe />
+      <span aria-hidden="true" className="wr-width-room" ref={room} data-width-room />
       <div className="wr-width-sticky">
         {metrics ? (
           <WidthHandle
             value={value}
             min={metrics.readingPx}
-            max={metrics.maxPx}
-            symmetric={false}
+            max={handleMax(metrics.maxPx, guides)}
+            symmetric
+            labelRoom={room}
             labelsAt="grip"
             guides={guides}
             label={copy.label}
             resetTo="reading"
-            onChange={(px, id) => preview(choiceFromHandle(px, id, metrics.fullPx))}
-            onCommit={(px, id) => commit(choiceFromHandle(px, id, metrics.fullPx))}
+            onChange={(px, id) => onDragChange(metrics, px, id)}
+            onCommit={(px, id) => onDragCommit(metrics, px, id)}
             onReset={reset}
           />
         ) : null}

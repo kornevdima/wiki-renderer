@@ -224,3 +224,56 @@ export function placeGripReadout(geometry: GripGeometry, gripX: number, width: n
   const fitsRight = !available || right + width <= available.right
   return { left: fitsRight ? right : left, top: geometry.barY + 8 }
 }
+
+/**
+ * Narrow `measured` (the viewport and clipping ancestors) to `room` (the app's explicit bounds), both in the same coordinates.
+ * Where nothing was measured, or the two do not overlap, the app's room wins; with no room, `measured` is unchanged.
+ */
+export function intersectRoom(measured: Available | undefined, room: Available | undefined): Available | undefined {
+  if (!room || !(room.right > room.left)) return measured
+  if (!measured) return room
+  const left = Math.max(measured.left, room.left)
+  const right = Math.min(measured.right, room.right)
+  return right > left ? { left, right } : room
+}
+
+/** Where the grip was and how wide the column was at one measurement (the grip sits on the column's right edge), px. */
+export type DragSample = { gripX: number; width: number }
+
+/**
+ * A pointer drag's anchor. A drag maps the pointer to a width as `startWidth + k·(pointerX − startX)`, k = 2 (symmetric) or 1.
+ * `offset` is the pointer's distance from the grip at the press (kept for the whole drag). `last` is the previous measurement and
+ * `armed` is the loop guard: see `syncDrag`.
+ */
+export type DragState = { startX: number; startWidth: number; offset: number; last: DragSample | null; armed: boolean }
+
+/** Drift tolerated before the column counts as having moved, px. */
+export const REANCHOR_TOLERANCE_PX = 1
+
+/** A new drag: the pointer at `pointerX`, the column `width` wide with its grip at `sample.gripX` (null where nothing can be measured). */
+export function startDrag(pointerX: number, width: number, sample: DragSample | null): DragState {
+  return { startX: pointerX, startWidth: width, offset: sample ? pointerX - sample.gripX : 0, last: sample, armed: true }
+}
+
+/** How far the grip is from where the width change since `prev` puts it: 0 for a column on a fixed anchor (centre when symmetric, left edge otherwise). */
+export function gripDrift(prev: DragSample, now: DragSample, symmetric: boolean): number {
+  return now.gripX - (prev.gripX + (now.width - prev.width) / (symmetric ? 2 : 1))
+}
+
+/**
+ * Re-anchor a drag when the column moved under the held pointer (a sidebar collapsing, a layout re-centring). `now` is the current
+ * measurement of the rendered column and `width` the width last given to `onChange`. When the grip is not where the width change
+ * explains, the drag restarts from the grip's measured place: `startX` = grip + `offset` and `startWidth` = `width`, so the next
+ * mapping keeps the pointer-to-grip distance of the press and the grip catches up with the pointer.
+ *
+ * Loop guard: a layout that moves in response to the width itself (a sliding column pinned by a side panel) shows drift on every
+ * move, and re-anchoring on each would add the lag to the width again and again. So a re-anchor disarms the guard, and drift is
+ * only acted on again after one measurement that the width explains (drift within tolerance). A response layout therefore costs one
+ * re-anchor per drag, and the mapping stays a plain function of the pointer after it.
+ */
+export function syncDrag(state: DragState, now: DragSample, width: number, symmetric: boolean, tolerance = REANCHOR_TOLERANCE_PX): { state: DragState; reanchored: boolean } {
+  if (!state.last) return { state: { ...state, last: now }, reanchored: false }
+  if (Math.abs(gripDrift(state.last, now, symmetric)) <= tolerance) return { state: { ...state, last: now, armed: true }, reanchored: false }
+  if (!state.armed) return { state: { ...state, last: now }, reanchored: false }
+  return { state: { ...state, startX: now.gripX + state.offset, startWidth: width, last: now, armed: false }, reanchored: true }
+}

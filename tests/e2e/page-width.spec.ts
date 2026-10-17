@@ -41,15 +41,22 @@ async function articleWidth(page: Page): Promise<number> {
   return (await box(page, "[data-testid=\"reader-content\"]")).width;
 }
 
-/** Presses the handle and moves it so the article is `toWidth` px wide; the button stays down. */
+// The handle is symmetric (US-281 round 5): the page and the side panel are centred together, so the article grows by twice the
+// pointer's travel. Four guides, a marker on each side of each.
+const GUIDES = 4;
+const GUIDE_MARKERS = 2 * GUIDES;
+
+/** Presses the handle and moves the pointer so the article is `toWidth` px wide (from its width at the press); the button stays down. */
 async function dragTo(page: Page, toWidth: number): Promise<void> {
   const h = await box(page, HANDLE);
   const a = await box(page, "[data-testid=\"reader-content\"]");
   const y = h.y + h.height / 2;
-  await page.mouse.move(h.x + h.width / 2, y);
+  const x0 = h.x + h.width / 2;
+  const x1 = x0 + (toWidth - a.width) / 2;
+  await page.mouse.move(x0, y);
   await page.mouse.down();
-  await page.mouse.move(a.x + toWidth - 20, y, { steps: 4 });
-  await page.mouse.move(a.x + toWidth, y, { steps: 4 });
+  await page.mouse.move(x1 - 10, y, { steps: 4 });
+  await page.mouse.move(x1, y, { steps: 4 });
 }
 
 async function fontPx(page: Page, selector: string): Promise<number> {
@@ -125,11 +132,12 @@ test.describe("US-280 page width", () => {
     await expect(page.locator(GUIDE)).toHaveCount(0);
     expect(await articleWidth(page)).toBeCloseTo(READING_PX, 0);
 
-    // Symmetric is off: the end markers only, one per guide, with all four labels, while the button is down.
+    // Symmetric (US-281 round 5: the page and the side panel are centred together): a marker on each side per guide, one set of labels.
     await dragTo(page, PORTRAIT_PX);
-    await expect(page.locator('[data-slot="width-handle-guide"][data-side="start"]')).toHaveCount(0);
-    await expect(page.locator(GUIDE)).toHaveCount(4);
-    await expect(page.locator('[data-slot="width-handle-guide-label"]')).toHaveCount(4);
+    await expect(page.locator('[data-slot="width-handle-guide"][data-side="start"]')).toHaveCount(GUIDES);
+    await expect(page.locator('[data-slot="width-handle-guide"][data-side="end"]')).toHaveCount(GUIDES);
+    await expect(page.locator(GUIDE)).toHaveCount(GUIDE_MARKERS);
+    await expect(page.locator('[data-slot="width-handle-guide-label"]')).toHaveCount(GUIDES);
     await expect(page.locator('[data-slot="width-handle-readout"]')).toBeVisible();
     await page.mouse.up();
     await expect.poll(() => widthCookie(context)).toBe("a4-portrait");
@@ -148,6 +156,11 @@ test.describe("US-280 page width", () => {
     await expect.poll(() => widthCookie(context)).toBe("a4-landscape");
     expect(await articleWidth(page)).toBeCloseTo(LANDSCAPE_PX, 0);
     await expect(page.locator(GUIDE)).toHaveCount(0);
+    // US-281: A4 landscape does not fit beside the expanded sidebar and the side panel, so choosing it collapsed the sidebar. Expand it
+    // again, so the Full guide below is the expanded room (948), as before.
+    await expect(page.locator('[data-testid="reader-shell"]')).toHaveAttribute("data-sidebar-collapsed", "true");
+    await page.getByRole("button", { name: "Expand sidebar" }).click();
+    await expect(page.locator('[data-testid="reader-shell"]')).not.toHaveAttribute("data-sidebar-collapsed", /.*/);
 
     // Free: between portrait and landscape and off every guide.
     await dragTo(page, 820);
@@ -172,14 +185,17 @@ test.describe("US-280 page width", () => {
     ["a4-landscape", LANDSCAPE_PX],
   ] as const) {
     test(`R2 the ${id} guide is marked snapped while dragging onto it`, async ({ page }) => {
+      // 1920 wide: A4 landscape fits beside the sidebar and the side panel there (US-281 clamps the page where it does not).
+      await page.setViewportSize({ width: 1920, height: 1080 });
       await openReady(page, RAIL_PAGE);
       if (id === "reading") {
         await dragTo(page, 800);
         await page.mouse.up();
       }
       await dragTo(page, px);
-      await expect(page.locator(`${GUIDE}[data-guide="${id}"][data-snapped]`)).toHaveCount(1);
-      await expect(page.locator(`${GUIDE}[data-snapped]`)).toHaveCount(1);
+      // One marker on each side of the snapped guide (the handle is symmetric), and no other guide marked.
+      await expect(page.locator(`${GUIDE}[data-guide="${id}"][data-snapped]`)).toHaveCount(2);
+      await expect(page.locator(`${GUIDE}[data-snapped]`)).toHaveCount(2);
       await page.mouse.up();
     });
   }
@@ -193,9 +209,9 @@ test.describe("US-280 page width", () => {
       await openReady(page, RAIL_PAGE);
       await dragTo(page, 700);
       const chips = page.locator('[data-slot="width-handle-guide-label"]');
-      // A guide that does not fit the room (max) is not offered at all; Full always is, with one chip per marker.
-      await expect(page.locator(`${GUIDE}[data-guide="full"]`)).toHaveCount(1);
-      const n = await page.locator(GUIDE).count();
+      // A guide that does not fit the room (max) is not offered at all; Full always is, with one chip per guide (markers on both sides).
+      await expect(page.locator(`${GUIDE}[data-guide="full"]`)).toHaveCount(2);
+      const n = await page.locator(`${GUIDE}[data-side="end"]`).count();
       expect(n).toBeGreaterThanOrEqual(3);
       await expect(chips).toHaveCount(n);
       for (let i = 0; i < n; i++) {
@@ -231,7 +247,7 @@ test.describe("US-280 page width", () => {
     expect(before).toBeCloseTo(800, 0);
     await page.keyboard.press("ArrowLeft");
     expect(Number(await grip.getAttribute("aria-valuenow"))).toBeCloseTo(before - 16, 0);
-    await expect(page.locator(GUIDE)).toHaveCount(4);
+    await expect(page.locator(GUIDE)).toHaveCount(GUIDE_MARKERS);
     expect(await grip.evaluate((el) => ({ fv: el.matches(":focus-visible"), outline: getComputedStyle(el).outlineStyle }))).toEqual({ fv: true, outline: "solid" });
   });
 
@@ -245,7 +261,7 @@ test.describe("US-280 page width", () => {
     const before = Number(await grip.getAttribute("aria-valuenow"));
     await page.keyboard.press("ArrowRight");
     expect(Number(await grip.getAttribute("aria-valuenow"))).toBeCloseTo(before + 16, 0);
-    await expect(page.locator(GUIDE)).toHaveCount(4);
+    await expect(page.locator(GUIDE)).toHaveCount(GUIDE_MARKERS);
     expect(await grip.evaluate((el) => ({ fv: el.matches(":focus-visible"), outline: getComputedStyle(el).outlineStyle }))).toEqual({ fv: true, outline: "solid" });
   });
 
@@ -253,7 +269,7 @@ test.describe("US-280 page width", () => {
   async function expectActiveDrag(page: Page): Promise<void> {
     await dragTo(page, 760);
     await expect(page.locator('[data-slot="width-handle"]')).toHaveAttribute("data-active", "true");
-    await expect(page.locator(GUIDE)).toHaveCount(4);
+    await expect(page.locator(GUIDE)).toHaveCount(GUIDE_MARKERS);
     await page.mouse.up();
     await page.mouse.move(60, 600, { steps: 3 });
     await expect(page.locator(GUIDE)).toHaveCount(0);
@@ -303,7 +319,7 @@ test.describe("US-280 page width", () => {
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
     await dragTo(page, 700);
     const markers = page.locator(GUIDE);
-    const n = await markers.count();
+    const n = await markers.count() / 2; // a marker on each side of each guide
     expect(n).toBeGreaterThanOrEqual(3);
     const inside = (b: { x: number; y: number; width: number; height: number }) => {
       expect(b.x).toBeGreaterThanOrEqual(0);
@@ -311,7 +327,7 @@ test.describe("US-280 page width", () => {
       expect(b.x + b.width).toBeLessThanOrEqual(1600);
       expect(b.y + b.height).toBeLessThanOrEqual(1000);
     };
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < 2 * n; i++) {
       const b = (await markers.nth(i).boundingBox())!;
       expect(b.height, `guide ${i}`).toBeLessThanOrEqual(170);
       expect(b.height, `guide ${i}`).toBeGreaterThan(0);
@@ -353,7 +369,7 @@ test.describe("US-280 page width", () => {
     await page.keyboard.press("ArrowRight");
     expect(Number(await grip.getAttribute("aria-valuenow"))).toBe(718);
     await expect(grip).toHaveAttribute("aria-valuetext", /^.+, 718 px$/);
-    await expect(page.locator(`${GUIDE}[data-guide="a4-portrait"][data-snapped]`)).toHaveCount(1);
+    await expect(page.locator(`${GUIDE}[data-guide="a4-portrait"][data-snapped]`)).toHaveCount(2);
     await page.keyboard.press("ArrowRight");
     expect(Number(await grip.getAttribute("aria-valuenow"))).toBe(734);
     await expect(grip).toHaveAttribute("aria-valuetext", /^734 px$/);
@@ -368,7 +384,7 @@ test.describe("US-280 page width", () => {
   test("R2 while dragging with the mouse the grip shows its drag box (outline solid) and the guides", async ({ page }) => {
     await openReady(page, RAIL_PAGE);
     await dragTo(page, 700);
-    await expect(page.locator(GUIDE)).toHaveCount(4);
+    await expect(page.locator(GUIDE)).toHaveCount(GUIDE_MARKERS);
     expect(await page.locator(HANDLE).evaluate((el) => getComputedStyle(el).outlineStyle)).toBe("solid");
     await page.mouse.up();
   });
@@ -397,7 +413,7 @@ test.describe("US-280 page width", () => {
     // Tab to the handle.
     for (let i = 0; i < 80 && !(await handle.evaluate((el) => document.activeElement === el)); i++) await page.keyboard.press("Tab");
     expect(await handle.evaluate((el) => document.activeElement === el)).toBe(true);
-    await expect(page.locator(GUIDE)).toHaveCount(4);
+    await expect(page.locator(GUIDE)).toHaveCount(GUIDE_MARKERS);
     expect(await handle.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe("solid");
     await expect(page.locator('[data-slot="width-handle-readout"]')).toBeVisible();
     await page.locator("body").click({ position: { x: 5, y: 500 } });
@@ -408,10 +424,12 @@ test.describe("US-280 page width", () => {
     await page.mouse.up();
     await expect(page.locator(GUIDE)).toHaveCount(0);
     await page.keyboard.press("ArrowRight");
-    await expect(page.locator(GUIDE)).toHaveCount(4);
+    await expect(page.locator(GUIDE)).toHaveCount(GUIDE_MARKERS);
   });
 
   test("R3 A4 guides: 190 mm / 277 mm columns and 11pt text", async ({ page, context, baseURL }) => {
+    // 1920 wide: both sheets fit beside the sidebar and the side panel (where they do not, the page narrows: sidebar.spec.ts R5).
+    await page.setViewportSize({ width: 1920, height: 1080 });
     for (const [value, px] of [
       ["a4-portrait", PORTRAIT_PX],
       ["a4-landscape", LANDSCAPE_PX],
@@ -430,29 +448,24 @@ test.describe("US-280 page width", () => {
     expect(await fontPx(page, ".wr-prose p")).toBe(16);
   });
 
-  // Operator ruling: on screen the rail stays beside the article at the A4 guides too; only when A4 + the rail's room does not fit
-  // the content slot does it go under the article, for that case only (builder's measured cases).
-  for (const [vw, vh, value, beside] of [
-    [1600, 1000, "a4-portrait", true],
-    [1600, 1000, "a4-landscape", false],
-    [1920, 1080, "a4-landscape", true],
-    [1380, 900, "a4-portrait", true],
-    [1360, 900, "a4-portrait", false],
+  // Operator ruling: on screen the rail stays beside the article at the A4 guides too. When A4 + the rail's room does not fit the
+  // content slot the page narrows instead and the rail stays (US-281, "Panel stays, page narrows"; sidebar.spec.ts R5 measures it).
+  for (const [vw, vh, value] of [
+    [1600, 1000, "a4-portrait"],
+    [1600, 1000, "a4-landscape"],
+    [1920, 1080, "a4-landscape"],
+    [1380, 900, "a4-portrait"],
+    [1360, 900, "a4-portrait"],
   ] as const) {
-    test(`R3 rail ${beside ? "beside" : "under"} the article at ${value}, ${vw}x${vh}`, async ({ page, context, baseURL }) => {
+    test(`R3 rail beside the article at ${value}, ${vw}x${vh}`, async ({ page, context, baseURL }) => {
       await page.setViewportSize({ width: vw, height: vh });
       await setWidthCookie(context, baseURL, value);
       await openReady(page, RAIL_PAGE);
       const a = await box(page, "[data-testid=\"reader-content\"]");
       const rail = await box(page, ".wr-rail");
       await expect(page.locator(".wr-rail .wr-properties").first()).toBeVisible();
-      if (beside) {
-        expect(rail.x).toBeGreaterThanOrEqual(a.x + a.width - 1);
-        await expect(page.locator(".wr-toc--inline").first()).toBeHidden();
-      } else {
-        expect(rail.y).toBeGreaterThanOrEqual(a.y + a.height - 1);
-        await expect(page.locator(".wr-toc--inline").first()).toBeVisible();
-      }
+      expect(rail.x).toBeGreaterThanOrEqual(a.x + a.width - 1);
+      await expect(page.locator(".wr-toc--inline").first()).toBeHidden();
     });
   }
 
@@ -487,12 +500,20 @@ test.describe("US-280 page width", () => {
 
   test("R3 a drag past Full clamps at Full and the handle stays on the article's edge", async ({ page, context }) => {
     await openReady(page, RAIL_PAGE);
-    await dragTo(page, 1300);
+    // Full on this layout, from the live slot and the side panel's room (not a hard-coded px).
+    const fullPx = await page.evaluate(() => {
+      const col = document.querySelector(".wr-column")!;
+      const slot = col.parentElement!;
+      const st = getComputedStyle(slot);
+      return slot.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight) - col.querySelector<HTMLElement>("[data-width-extra-probe]")!.getBoundingClientRect().width;
+    });
+    // Just past Full, short of A4 landscape (the far end, which commits landscape: sidebar.spec.ts R4c): clamps at Full.
+    await dragTo(page, fullPx + 20);
     await page.mouse.up();
     await expect.poll(() => widthCookie(context)).toBe("full");
     const a = await box(page, "[data-testid=\"reader-content\"]");
     const h = await box(page, HANDLE);
-    expect(Math.abs(a.width - 948)).toBeLessThanOrEqual(3);
+    expect(Math.abs(a.width - fullPx)).toBeLessThanOrEqual(3);
     expect(Math.abs(h.x + h.width / 2 - (a.x + a.width))).toBeLessThanOrEqual(2);
     const rail = await box(page, ".wr-rail");
     expect(rail.x).toBeGreaterThanOrEqual(a.x + a.width - 1);
@@ -522,6 +543,7 @@ test.describe("US-280 page width", () => {
   });
 
   test("R4 the printed column is fluid: at an A4 guide it is the screen A4 width, with 11pt text", async ({ page, context, baseURL }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 }); // both sheets fit beside the sidebar and the side panel (US-281)
     for (const [value, px] of [
       ["a4-portrait", PORTRAIT_PX],
       ["a4-landscape", LANDSCAPE_PX],
@@ -536,7 +558,7 @@ test.describe("US-280 page width", () => {
       await page.emulateMedia({ media: "print" });
       expect(Math.abs((await articleWidth(page)) - screen)).toBeLessThanOrEqual(1);
       expect(await fontPx(page, ".wr-prose p")).toBeCloseTo((11 * 96) / 72, 1);
-      await page.setViewportSize({ width: 1600, height: 1000 });
+      await page.setViewportSize({ width: 1920, height: 1080 });
       await page.emulateMedia({ media: "screen" });
     }
   });
@@ -672,15 +694,16 @@ test.describe("US-280 page width", () => {
     expect(await num("aria-valuenow")).toBeCloseTo(948, -1);
     await expect.poll(() => widthCookie(context)).toBe("full");
     await page.keyboard.press("PageUp");
-    expect(await num("aria-valuenow")).toBeCloseTo(LANDSCAPE_PX, 0);
+    // The readout shows the real width: 948 until the auto-collapse (US-281) has made room, then the 277 mm page.
+    await expect.poll(async () => Math.abs((await num("aria-valuenow")) - LANDSCAPE_PX)).toBeLessThan(0.5);
     await expect.poll(() => widthCookie(context)).toBe("a4-landscape");
-    await page.keyboard.press("PageDown"); // landscape -> Full
-    expect(await num("aria-valuenow")).toBeCloseTo(948, -1);
+    // US-281: A4 landscape did not fit, so it collapsed the sidebar, and Full is now wider than landscape: PageDown goes straight to portrait.
+    await expect(page.locator('[data-testid="reader-shell"]')).toHaveAttribute("data-sidebar-collapsed", "true");
     await page.keyboard.press("PageDown");
     expect(await num("aria-valuenow")).toBeCloseTo(PORTRAIT_PX, 0);
 
     // Axe, with the handle focused and its guides showing.
-    await expect(page.locator(GUIDE)).toHaveCount(4);
+    await expect(page.locator(GUIDE)).toHaveCount(GUIDE_MARKERS);
     // Page chrome that sits outside a landmark with or without the handle (same six nodes at 1024 px, where it is absent) is
     // excluded by selector; the `region` rule itself stays on, so the handle is checked against it.
     // The chips ease their colours (CSS transitions); axe reads mid-fade colours as low contrast, so let the transitions finish.

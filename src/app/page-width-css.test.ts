@@ -5,6 +5,9 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { PAGE_WIDTH_BREAKPOINT_PX, PRINT_MARGIN_MM } from "@/lib/page-width";
+import { RAIL_ROOM_PX } from "@/lib/sidebar";
+
+const LAYOUT = join(dirname(fileURLToPath(import.meta.url)), "..", "components", "layout");
 
 /** US-280: pins on the page-width CSS that need no browser. The behaviour is proved in a browser (the e2e and the verification). */
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -75,31 +78,76 @@ describe("the page width's screen rules (US-280)", () => {
     expect(reader).toMatch(/\.wr-width-probe\s*\{[^}]*width:\s*var\(--measure\)/);
   });
 
-  it("keeps the rail beside the article at every width: any rule that moves it under is inside an A4 fit container query", () => {
-    // Every rule that changes the rail's place for a width (static rail, hidden rail copy, folded copy, single-track grid) sits in a @container block.
-    const outside = reader.replace(/@container[^{]*\{(?:[^{}]*\{[^{}]*\})*\s*\}/g, "");
-    for (const m of outside.matchAll(/(html\[data-page-width[^{]*)\{([^}]*)\}/g)) {
+  it("keeps the rail beside the article at every width: no screen rule moves it under, and there is no fit container query (US-281)", () => {
+    expect(reader).not.toMatch(/@container/);
+    expect(reader).not.toMatch(/container-type/);
+    for (const m of reader.matchAll(/(html\[data-page-width[^{]*)\{([^}]*)\}/g)) {
       if (/\.wr-layout--aside\s*$/.test(m[1]!)) expect(m[2], m[0]).toMatch(/var\(--sidebar-w\)/);
       expect(m[1], m[0]).not.toMatch(/\.wr-(rail|toc--rail|toc--inline)\b/);
     }
   });
 
-  it("moves the rail under only when the A4 article plus the rail's room does not fit the slot (the fit rule)", () => {
-    const containers = [...reader.matchAll(/@container\s*\(width < calc\((\d+)mm \+ (\d+)px\)\)\s*\{((?:[^{}]*\{[^{}]*\})*)\s*\}/g)];
-    // A4 content width is the sheet less the 10mm margins: 190mm portrait, 277mm landscape.
-    expect(containers.map((m) => [m[1], m[2]])).toEqual([["190", "324"], ["277", "324"]]);
-    expect(containers[0]![3]).toContain('data-page-width="a4-portrait"');
-    expect(containers[0]![3]).not.toContain("a4-landscape");
-    expect(containers[1]![3]).toContain('data-page-width="a4-landscape"');
-    expect(containers[1]![3]).not.toContain("a4-portrait");
-    for (const c of containers) {
-      expect(c[3]).toMatch(/\.wr-rail\s*\{[^}]*position:\s*static/);
-      expect(c[3]).toMatch(/\.wr-layout--aside\s*\{[^}]*grid-template-columns:\s*minmax\(0, var\(--wr-page-px\)\)/);
-    }
-    // The room the rail takes is the theme's gap and column, in px, because a container condition cannot read a custom property.
+  it("narrows the page, not the rail: the grid track is the page width held to the room beside the rail", () => {
+    expect(reader).toMatch(/grid-template-columns:\s*minmax\(0, min\(var\(--wr-page-px, 100%\), calc\(100% - var\(--wr-extra\)\)\)\) var\(--sidebar-w\)/);
+  });
+
+  it("holds the rail's room in the theme: the gap and the column add up to RAIL_ROOM_PX", () => {
     const theme = strip(readFileSync(join(HERE, "esg-theme.css"), "utf8"));
     const px = (name: string) => Number(new RegExp(`${name}:\\s*(\\d+)px`).exec(theme)![1]);
-    expect(px("--space-60") + px("--sidebar-w")).toBe(324);
-    expect(reader).toMatch(/div:has\(> \.wr-column\[data-width-scope\]\)\s*\{\s*container-type:\s*inline-size/);
+    expect(px("--space-60") + px("--sidebar-w")).toBe(RAIL_ROOM_PX);
+  });
+
+  it("hides the sidebar's content in the collapsed strip from bp-lg only, and keeps the brand link's name (US-281)", () => {
+    expect(reader).toMatch(/@media \(max-width: 1023\.98px\)\s*\{\s*aside\[data-slot="sidebar"\] \[data-slot="sidebar-footer"\]\s*\{\s*display:\s*none/);
+    const strip1024 = reader.match(/@media \(min-width: 1024px\)\s*\{([\s\S]*?)\n\}/);
+    expect(strip1024).not.toBeNull();
+    expect(strip1024![1]).toMatch(/reader-sidebar-body"\] > \*\s*\{\s*display:\s*none/);
+    expect(strip1024![1]).toMatch(/clip-path/);
+    // Every rule that hides something in the strip: none may match the brand link, its name, the brand row, or the footer's button.
+    const hiders = [...strip1024![1].matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => /display:\s*none/.test(m[2]!)).map((m) => m[1]!.trim());
+    expect(hiders).toEqual(['aside[data-slot="sidebar"][data-collapsed="true"] [data-testid="reader-sidebar-body"] > *']);
+    for (const selector of hiders) expect(selector).not.toMatch(/brand|footer|sidebar-collapse"/);
   });
 });
+
+/**
+ * F2 (US-281): the collapsed strip's CSS in wr-reader.css leans on the installed design system's own markup. A design-system update
+ * that renames one of these must turn a test red here, not leave the strip silently un-hidden.
+ */
+describe("the strip CSS's dependencies on the installed design system (US-281)", () => {
+  const sidebarSrc = readFileSync(join(LAYOUT, "sidebar.tsx"), "utf8");
+  const brandSrc = readFileSync(join(LAYOUT, "brand.tsx"), "utf8");
+  const theme = strip(readFileSync(join(HERE, "esg-theme.css"), "utf8"));
+  const globals = strip(readFileSync(join(HERE, "globals.css"), "utf8"));
+
+  it("the Sidebar is an aside with data-slot=sidebar and data-collapsed carrying the collapsed state", () => {
+    expect(sidebarSrc).toMatch(/<aside[^>]*data-slot="sidebar"/);
+    expect(sidebarSrc).toMatch(/<aside[^>]*data-collapsed=\{collapsed\}/);
+    expect(reader).toContain('aside[data-slot="sidebar"][data-collapsed="true"]');
+  });
+
+  it("the footer is data-slot=sidebar-footer and the collapse button data-slot=sidebar-collapse, hidden below lg", () => {
+    expect(sidebarSrc).toMatch(/data-slot="sidebar-footer"/);
+    expect(sidebarSrc).toMatch(/data-slot="sidebar-collapse"/);
+    expect(sidebarSrc).toMatch(/aria-pressed=\{collapsed\}/);
+    expect(sidebarSrc).toContain("max-lg:hidden");
+    expect(reader).toContain('[data-slot="sidebar-footer"]');
+  });
+
+  it("the Brand is data-testid=brand whose last child is the name span (what the strip visually hides)", () => {
+    expect(brandSrc).toMatch(/data-testid="brand"/);
+    const textSpanAt = brandSrc.indexOf("<span className={alwaysShowText");
+    expect(textSpanAt).toBeGreaterThan(0);
+    expect(brandSrc.slice(textSpanAt)).toMatch(/<\/span>\s*<\/Link>/); // the text span is the Link's last child
+    expect(reader).toContain('[data-testid="brand"] > span:last-child');
+  });
+
+  it("bp-lg is Tailwind's default lg, 64rem = 1024 px: the theme does not redefine it, and the strip CSS uses 1024 / 1023.98", () => {
+    expect(theme + globals).not.toMatch(/--breakpoint-lg\s*:/);
+    expect(theme + globals).not.toMatch(/--breakpoint-\*\s*:/);
+    expect(sidebarSrc).toContain("lg:"); // the DS's own collapsed styles key on lg
+    expect(reader).toContain("@media (min-width: 1024px)");
+    expect(reader).toContain("@media (max-width: 1023.98px)");
+  });
+});
+

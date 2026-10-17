@@ -129,12 +129,13 @@ describe("S12 (X9, US-158 sc.6-7): the shell's only way out of the wiki is All w
     for (const href of hrefs) expect(href).not.toMatch(/[#?]/);
   });
 
-  it("carries no wiki switcher control, no form and no select; its four buttons are the menu button, the drawer's Close navigation (in the empty view's shell), the Search trigger (US-091) and the Settings menu button (US-286)", () => {
+  it("carries no wiki switcher control, no form and no select; its five buttons are the menu button, the drawer's Close navigation (in the empty view's shell), the Search trigger (US-091), the Settings menu button (US-286) and the sidebar's collapse button (US-281)", () => {
     const out = html(createElement(PageShell, { wikiId: WIKI, wiki: { name: "Guide" }, sha: "a".repeat(40), tree: [], activePath: null, children: null }));
     expect(out).not.toMatch(/<(form|input|select|option)\b/);
-    // Four buttons: the menu button (US-187, below bp-lg), the drawer's Close navigation (US-222), the Search trigger (US-091) and the Settings button (US-286). The empty view has no page bar, so no Save as PDF (US-188, FR-044 via CR-006).
-    expect(out.match(/<button\b/g) ?? []).toHaveLength(4);
+    // Five buttons: the menu button (US-187, below bp-lg), the drawer's Close navigation (US-222), the Search trigger (US-091), the Settings button (US-286) and the sidebar's collapse button (US-281). The empty view has no page bar, so no Save as PDF (US-188, FR-044 via CR-006).
+    expect(out.match(/<button\b/g) ?? []).toHaveLength(5);
     expect(out).toContain('data-testid="nav-close"');
+    expect(out).toContain('data-slot="sidebar-collapse"');
     expect(out).toContain('data-testid="search-trigger"');
     expect(out).toContain('data-testid="settings-menu"');
     expect(out).toContain('aria-label="Settings"');

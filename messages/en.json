@@ -58,7 +58,9 @@
     "allWikis": "All wikis",
     "navLabel": "Wiki pages",
     "brandProduct": "Wikis",
-    "closeNavigation": "Close navigation"
+    "closeNavigation": "Close navigation",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar"
   },
   "pdf": {
     "button": "Save as PDF",

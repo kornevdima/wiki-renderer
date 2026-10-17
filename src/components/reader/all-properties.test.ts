@@ -110,10 +110,11 @@ describe("P2 (US-220 E3-D5): the page rail is the one complementary landmark, ou
     const shell = html(
       createElement(PageShell, { wikiId: "w", wiki: { name: "Guide" }, sha: "a".repeat(40), tree: [], activePath: null, frontmatter: buildFrontmatterView({ a: 1 }), children: createElement("p", null, "b") }),
     );
-    expect(shell.match(/<aside\b/g)).toHaveLength(1);
+    // The sidebar is a DS Sidebar (an aside named for the product, US-281); the page rail is the one aside named Page details.
+    expect(shell.match(/<aside aria-label="Page details"/g)).toHaveLength(1);
     expect(shell).toMatch(/<aside aria-label="Page details" data-testid="reader-rail" class="wr-rail">/);
-    expect(shell.indexOf("</main>")).toBeLessThan(shell.indexOf("<aside"));
-    expect(shell.indexOf("<aside")).toBeLessThan(shell.indexOf('data-testid="frontmatter-panel"'));
+    expect(shell.indexOf("</main>")).toBeLessThan(shell.indexOf('<aside aria-label="Page details"'));
+    expect(shell.indexOf('<aside aria-label="Page details"')).toBeLessThan(shell.indexOf('data-testid="frontmatter-panel"'));
     expect(shell).not.toMatch(/reader-properties-column|aria-label="Properties"/);
   });
 });
@@ -125,7 +126,7 @@ describe("P3 (US-108 S3): no fields, no panel, no empty landmark", () => {
   it("PageShell with no or empty frontmatter has no aside and no properties column", () => {
     for (const frontmatter of [undefined, []]) {
       const shell = html(createElement(PageShell, { wikiId: "w", wiki: { name: "Guide" }, sha: "a".repeat(40), tree: [], activePath: null, frontmatter, children: null }));
-      expect(shell).not.toMatch(/<aside|properties|reader-rail|reader-properties-column/i);
+      expect(shell).not.toMatch(/<aside aria-label="Page details"|properties|reader-rail|reader-properties-column/i);
     }
   });
 });

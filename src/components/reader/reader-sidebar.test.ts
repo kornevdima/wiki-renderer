@@ -62,3 +62,25 @@ describe("ReaderSidebar", () => {
     expect(render()).toContain("print:hidden");
   });
 });
+
+describe("ReaderSidebar in the DS Sidebar (US-281)", () => {
+  it("wraps the content in the DS aside, with the collapse button in the footer after the tree", () => {
+    const out = render();
+    expect(out).toMatch(/<aside aria-label="Wikis" data-slot="sidebar" data-collapsed="false"/);
+    expect(out).toContain('data-slot="sidebar-footer"');
+    expect(out).toContain('data-slot="sidebar-collapse"');
+    expect(out).toContain('aria-pressed="false"');
+    expect(out).toContain(">Collapse sidebar</span>");
+    expect(out.indexOf('data-testid="reader-nav"')).toBeLessThan(out.indexOf('data-slot="sidebar-footer"'));
+  });
+
+  it("keeps the brand (mark through brandProps, never the ESG PNG) outside the body that the strip hides", () => {
+    const out = render();
+    expect(out).not.toContain("esg-logo-mark.png");
+    const body = out.indexOf('data-testid="reader-sidebar-body"');
+    expect(out.indexOf('data-testid="brand"')).toBeLessThan(body);
+    expect(out.indexOf('data-testid="reader-all-wikis"')).toBeGreaterThan(body);
+    expect(out.indexOf('data-testid="reader-nav"')).toBeGreaterThan(body);
+    expect(out.indexOf('data-testid="nav-close"')).toBeLessThan(body);
+  });
+});

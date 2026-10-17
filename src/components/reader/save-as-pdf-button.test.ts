@@ -79,7 +79,7 @@ describe("PageShell wiring (D1)", () => {
     expect(actions).not.toContain("For the best PDF");
   });
   it("defaults to no diagrams (the empty view)", () => {
-    expect(shell()).not.toContain("aria-disabled");
+    expect(shell()).not.toContain('aria-disabled="true"');
   });
 });
 
