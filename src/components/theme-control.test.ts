@@ -67,7 +67,7 @@ describe("US-172 theme control, server-rendered", () => {
 
   it("the root layout reads the cookie on the server and carries no inline script", () => {
     const layout = read("../app/layout.tsx");
-    expect(layout).toContain("cookies()).get(THEME_COOKIE)");
+    expect(layout).toContain("cookieStore.get(THEME_COOKIE)");
     expect(layout).toContain("data-theme={themeAttribute(theme)}");
     expect(layout).not.toMatch(/<script|dangerouslySetInnerHTML/);
   });

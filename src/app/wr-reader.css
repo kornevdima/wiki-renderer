@@ -358,4 +358,164 @@ tt,
     .wr-properties > :not(summary) {
         display: block;
     }
+    /* The content slot's own padding goes, so the printed column is the whole printable area: fluid, no px width, and its line breaks
+       equal the A4 screen preview's at the dialog's default margins (the dialog's Minimum or None margins just widen it). */
+    div:has(> .wr-column) {
+        padding: 0;
+    }
+}
+
+/*
+ * The page width (US-280). The reading view's column takes the width that the root layout read from the `wr-page-width` cookie
+ * (`html[data-page-width]`: `a4-portrait`, `a4-landscape`, `full` or `free`, with `--wr-page-px` for all but `full`) from 1200px, and
+ * only on a rendered page (`.wr-column[data-width-scope]`): the source view, the editor and the landing keep the measure. Below
+ * 1200px, and with no attribute (Reading, the default), none of this applies and the column is as it always was. Screen only: print is
+ * the rules above.
+ *
+ * The column is the article plus, when the page has a rail, the room the rail takes beside the article (`--wr-extra`). It keeps the
+ * left edge the Reading column has, so the handle on the article's right edge follows the pointer. At Full and a free width the rail
+ * stays beside the article, as at Reading; only the two A4 guides drop it (the block after this one). `full` is `100%`, which the
+ * column's min() holds to the room there is.
+ */
+@media screen and (min-width: 1200px) {
+    /* The content slot caps itself at --content-max (1200px); a wider column needs the room. Same look at Reading: the column is narrower. */
+    html:has(.wr-column[data-width-scope]) {
+        --content-max: none;
+    }
+    html[data-page-width="full"] {
+        --wr-page-px: 100%;
+    }
+    html[data-page-width] .wr-column[data-width-scope]:has(.wr-layout--aside) {
+        --wr-extra: calc(var(--space-60) + var(--sidebar-w));
+    }
+    /* The column keeps the left edge the Reading column has (so the handle on the article's right edge follows the pointer 1:1) and
+       slides left only when the right side runs out of room. */
+    html[data-page-width] .wr-column[data-width-scope],
+    html[data-page-width] .wr-column[data-width-scope]:has(.wr-layout--aside) {
+        max-width: none;
+        justify-self: start;
+        width: min(100%, calc(var(--wr-page-px, 100%) + var(--wr-extra, 0px)));
+        margin-left: max(0px, min(calc((100% - var(--measure) - var(--wr-extra, 0px)) / 2), calc(100% - var(--wr-page-px, 100%) - var(--wr-extra, 0px))));
+    }
+    html[data-page-width] .wr-column[data-width-scope] .wr-prose {
+        max-width: none;
+    }
+    /* Free and Full: the article grows and the rail keeps its column beside it, as at Reading. */
+    html[data-page-width] .wr-column[data-width-scope] .wr-layout--aside {
+        grid-template-columns: minmax(0, min(var(--wr-page-px, 100%), calc(100% - var(--wr-extra)))) var(--sidebar-w);
+    }
+}
+
+/*
+ * The rail stays beside the article at every width, the A4 guides included (operator 2026-10-17: the side panel is how a reader
+ * navigates a long page). It moves into the flow only in print (the print block above), and, until the sidebar can collapse (US-281),
+ * on screen when an A4 article plus the rail's room does not fit the content slot: then the rail goes under the article, for that
+ * case only, so the A4 article is never narrower than its guide. The slot is a size container (inline size, which its own
+ * `w-full` already fixes), and the conditions are the A4 content width (190mm, 277mm) plus the rail's room in literal px, because a
+ * container condition cannot read a custom property: 324px is `--space-60` (60px) + `--sidebar-w` (264px), pinned by a test.
+ */
+@media screen and (min-width: 1200px) {
+    div:has(> .wr-column[data-width-scope]) {
+        container-type: inline-size;
+    }
+}
+@media screen and (min-width: 1200px) {
+    /* TODO(US-281): remove both fit blocks when the sidebar can collapse and the rail always fits beside the article. */
+    @container (width < calc(190mm + 324px)) {
+        html[data-page-width="a4-portrait"] .wr-column[data-width-scope] .wr-layout--aside {
+            grid-template-columns: minmax(0, var(--wr-page-px));
+        }
+        html[data-page-width="a4-portrait"] .wr-column[data-width-scope] .wr-rail {
+            position: static;
+            max-height: none;
+            overflow: visible;
+        }
+        html[data-page-width="a4-portrait"] .wr-column[data-width-scope] .wr-toc--rail {
+            display: none;
+        }
+        html[data-page-width="a4-portrait"] .wr-column[data-width-scope] .wr-toc--inline {
+            display: block;
+        }
+        html[data-page-width="a4-portrait"] .wr-column[data-width-scope] .wr-rail:not(:has(.wr-properties)) {
+            display: none;
+        }
+    }
+    /* TODO(US-281): see above. */
+    @container (width < calc(277mm + 324px)) {
+        html[data-page-width="a4-landscape"] .wr-column[data-width-scope] .wr-layout--aside {
+            grid-template-columns: minmax(0, var(--wr-page-px));
+        }
+        html[data-page-width="a4-landscape"] .wr-column[data-width-scope] .wr-rail {
+            position: static;
+            max-height: none;
+            overflow: visible;
+        }
+        html[data-page-width="a4-landscape"] .wr-column[data-width-scope] .wr-toc--rail {
+            display: none;
+        }
+        html[data-page-width="a4-landscape"] .wr-column[data-width-scope] .wr-toc--inline {
+            display: block;
+        }
+        html[data-page-width="a4-landscape"] .wr-column[data-width-scope] .wr-rail:not(:has(.wr-properties)) {
+            display: none;
+        }
+    }
+}
+
+/*
+ * The handle's host (US-280): a box laid over the article, as wide as the article and as tall as the page, holding a sticky box about
+ * a viewport tall so the grip stays on screen on a long page. The WidthHandle fills the sticky box. Not shown below 1200px or in print.
+ * The probe is one measure wide in the article's base font size (16px): its width is the Reading guide.
+ */
+/* The host is a child of <main> (a landmark), so the handle is never outside one; main is its positioned parent, only on the rendered
+   page with a width scope, from 1200px. The host is absolutely positioned, so it takes no flow space; the article's first and last
+   blocks are found among the other children (`.wr-prose > :nth-child(1 of :not(.wr-width-track))` and its last-child twin in wr-prose.css),
+   so the host's place in the DOM does not matter. */
+@media screen and (min-width: 1200px) {
+    .wr-layout > .wr-prose:has(> .wr-width-track) {
+        position: relative;
+    }
+}
+.wr-width-track,
+.wr-width-probe {
+    display: none;
+}
+@media screen and (min-width: 1200px) {
+    .wr-width-track {
+        display: block;
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+    .wr-width-sticky {
+        position: sticky;
+        top: calc(var(--topbar-h) + var(--space-60));
+        height: min(calc(100vh - var(--topbar-h) - 2 * var(--space-60)), 100%);
+    }
+    .wr-width-probe {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        font-size: 16px; /* the same 16px as .wr-prose, not the 11pt an A4 guide gives it: the probe is the Reading measure (page-width-css.test.ts pins the two) */
+        width: var(--measure);
+        height: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+    /* The room a rail takes beside the article: its gap and its column. Read by the handle to know how wide Full can be. */
+    .wr-width-probe--extra {
+        width: calc(var(--space-60) + var(--sidebar-w));
+    }
+}
+
+/*
+ * The print margin (US-280): one unnamed `@page` with a 10mm margin, so the print dialog's "Default" margins are 10mm and its Minimum
+ * and None still work. The A4 guides preview the dialog's A4 portrait (190mm) and landscape (277mm) at Default margins; the person picks
+ * the paper and orientation in the dialog. NEVER add `size` to any @page rule (named or not): Chrome then hides the dialog's Layout
+ * (portrait / landscape) control (operator 2026-10-17). The 10mm is the one PRINT_MARGIN_MM in src/lib/page-width.ts assumes
+ * (page-width-css.test.ts pins the two together). The print column itself is fluid.
+ */
+@page {
+    margin: 10mm;
 }

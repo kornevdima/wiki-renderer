@@ -57,10 +57,10 @@
     color: var(--foreground);
     overflow-wrap: break-word;
 }
-.wr-prose > :first-child {
+.wr-prose > :nth-child(1 of :not(.wr-width-track)) {
     margin-top: 0;
 }
-.wr-prose > :last-child {
+.wr-prose > :nth-last-child(1 of :not(.wr-width-track)) {
     margin-bottom: 0;
 }
 
@@ -916,24 +916,55 @@
 
 /* ---- Print (Save as PDF is the browser's print of this page; the tokens are forced light). Nothing is added: no URLs after
    links, no header or footer. Long code wraps instead of being clipped, tables lose their scroll. ---- */
-@media print {
-    .wr-prose {
-        max-width: none;
-        font-size: 11pt;
-        line-height: 1.5;
-    }
-    .wr-prose h1 {
+/* The print type scale and the way code and tables wrap on paper, written once. `@media print` applies it to every page; the
+   reader's A4 guides (US-280) apply it on screen to the article, so the A4 preview breaks lines where the printout will. */
+@utility wr-print-type {
+    max-width: none;
+    font-size: 11pt;
+    line-height: 1.5;
+    & h1 {
         font-size: 20pt;
         line-height: 1.25;
     }
-    .wr-prose h2 {
+    & h2 {
         font-size: 16pt;
         line-height: 1.3;
         margin-top: 18pt;
     }
-    .wr-prose h3 {
+    & h3 {
         font-size: 13pt;
         line-height: 1.3;
+    }
+    & pre,
+    & pre code {
+        white-space: pre-wrap;
+        overflow: visible;
+        width: auto;
+        overflow-wrap: anywhere;
+    }
+    & pre {
+        font-size: 9pt;
+        line-height: 1.4;
+    }
+    & table {
+        display: table;
+        width: 100%;
+        overflow: visible;
+        font-size: 9pt;
+    }
+    & :where(th, td) {
+        min-width: 0;
+    }
+}
+@media screen and (min-width: 1200px) {
+    html[data-page-width^="a4"] .wr-column[data-width-scope] .wr-prose {
+        @apply wr-print-type;
+    }
+}
+
+@media print {
+    .wr-prose {
+        @apply wr-print-type;
     }
     .wr-prose :where(h1, h2, h3, h4, h5, h6) {
         break-after: avoid;
@@ -947,26 +978,6 @@
     }
     .wr-prose .external-link-icon {
         display: none;
-    }
-    .wr-prose pre,
-    .wr-prose pre code {
-        white-space: pre-wrap;
-        overflow: visible;
-        width: auto;
-        overflow-wrap: anywhere;
-    }
-    .wr-prose pre {
-        font-size: 9pt;
-        line-height: 1.4;
-    }
-    .wr-prose table {
-        display: table;
-        width: 100%;
-        overflow: visible;
-        font-size: 9pt;
-    }
-    .wr-prose :where(th, td) {
-        min-width: 0;
     }
     .wr-prose :where(pre, table, img, details, [data-mermaid-id], .callout, .note-embed, .embed-marker) {
         break-inside: avoid;

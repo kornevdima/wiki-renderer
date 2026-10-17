@@ -33,7 +33,7 @@ describe("self-hosted fonts (US-171)", () => {
   });
 
   it("publishes the variables on <html>", () => {
-    expect(layout).toMatch(/<html lang=\{locale\} className=\{fontVariableClasses\} data-theme=\{themeAttribute\(theme\)\}>/);
+    expect(layout).toMatch(/<html lang=\{locale\} className=\{fontVariableClasses\} data-theme=\{themeAttribute\(theme\)\} data-page-width=\{width\.attribute\} style=\{htmlStyle\}>/);
   });
 
   it("puts each font first in the theme's family stacks", () => {

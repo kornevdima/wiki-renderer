@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import type { FrontmatterField, OutlineEntry } from "@/content/render/types";
 import type { NavNode } from "@/content/runtime/types";
 
+import { PageWidthHandle } from "@/components/page-width-control";
 import { ThemeSelect } from "@/components/theme-control";
 
 import { AllProperties } from "./all-properties";
@@ -77,6 +78,9 @@ export interface PageShellProps {
 export function PageShell({ wikiId, wiki, sha, tree, activePath, pageTitle, stale, frontmatter, outline, diagramCount = 0, viewKey = "", sourceControls, children }: PageShellProps) {
   const tSearch = useTranslations("search");
   const tRail = useTranslations("pageRail");
+  const tWidth = useTranslations("pageWidth");
+  // US-280: only the rendered page takes a width; the source view, the editor and the landing keep the measure.
+  const widthScope = sourceControls?.mode === "page";
   const hasProperties = frontmatter !== undefined && frontmatter.length > 0;
   const hasAnchors = outline !== undefined && outline.length > 0;
   const hasToc = outline !== undefined && showsOutline(outline);
@@ -120,7 +124,7 @@ export function PageShell({ wikiId, wiki, sha, tree, activePath, pageTitle, stal
         </Topbar>
       }
     >
-      <div className="wr-column" data-testid="reader-column">
+      <div className="wr-column" data-testid="reader-column" data-width-scope={widthScope ? "" : undefined}>
         {stale ? <StaleNotice since={stale.since} /> : null}
         {activePath !== null ? (
           <PageBar
@@ -133,6 +137,12 @@ export function PageShell({ wikiId, wiki, sha, tree, activePath, pageTitle, stal
         <div className={hasRail ? "wr-layout wr-layout--aside" : "wr-layout"}>
           <main {...MAIN_REGION} data-testid="reader-content" className="wr-prose min-w-0">
             {children}
+            {/* US-280: the width handle sits inside <main> (it is laid over the article, which is main), so it is never outside a landmark. It is the last child. */}
+            {widthScope ? (
+              <PageWidthHandle
+                copy={{ label: tWidth("label"), reading: tWidth("reading"), a4Portrait: tWidth("a4Portrait"), a4Landscape: tWidth("a4Landscape"), full: tWidth("full") }}
+              />
+            ) : null}
           </main>
           {hasRail ? (
             // The page rail (SA-MOD Reader UI and print E3-D5): one complementary landmark beside the article, outside <main>.

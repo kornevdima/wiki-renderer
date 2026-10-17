@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import type { Crumb } from "@/components/layout/breadcrumbs-view-model";
 
+import { PageWidthReset } from "@/components/page-width-control";
 import { PdfBrowserHint } from "./pdf-browser-hint";
 import { SaveAsPdfButton } from "./save-as-pdf-button";
 import { SourceControls } from "./source-controls";
@@ -39,6 +40,7 @@ export function PageBar({ crumbs, sourceControls, diagramCount, viewKey }: PageB
           <>
             <SaveAsPdfButton diagramCount={diagramCount} viewKey={viewKey} copy={{ button: tPdf("button"), preparing: tPdf("preparing") }} />
             <PdfBrowserHint text={tPdf("chromeHint")} />
+            {sourceControls?.mode === "page" ? <PageWidthReset /> : null}
           </>
         )}
       </div>

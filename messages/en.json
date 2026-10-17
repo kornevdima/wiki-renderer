@@ -191,6 +191,14 @@
     "title": "All properties",
     "empty": "empty"
   },
+  "pageWidth": {
+    "label": "Page width",
+    "reading": "Reading",
+    "a4Portrait": "A4 portrait",
+    "a4Landscape": "A4 landscape",
+    "full": "Full",
+    "reset": "Reset page width"
+  },
   "pageRail": {
     "label": "Page details"
   },

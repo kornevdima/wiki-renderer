@@ -6,9 +6,11 @@ import { getLocale, getMessages, getTranslations } from "next-intl/server";
 
 import { SkipLink } from "@/components/layout/skip-link";
 import { NonceBridge } from "@/components/nonce-bridge";
+import { PageWidthProvider } from "@/components/page-width-control";
 import { ThemeProvider } from "@/components/theme-control";
 import { fontVariableClasses } from "@/fonts";
 import { branding } from "@/lib/branding";
+import { documentWidth, PAGE_WIDTH_COOKIE, parsePageWidth } from "@/lib/page-width";
 import { parseTheme, themeAttribute, THEME_COOKIE } from "@/lib/theme";
 
 import "./globals.css";
@@ -44,16 +46,28 @@ export default async function RootLayout({
 
   // The stored Light / Dark / System choice (US-172): a `theme` cookie, read here so the first byte of HTML already
   // carries `data-theme` and no script is needed. Anything unreadable is System, which renders no attribute.
-  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const cookieStore = await cookies();
+  const theme = parseTheme(cookieStore.get(THEME_COOKIE)?.value);
+
+  // The stored page width (US-280): a `wr-page-width` cookie, read here for the same reason, so the first byte of HTML already
+  // carries the width (`data-page-width`, `--wr-page-px`) and the column does not move when the page hydrates. The CSS applies it
+  // only on the reading view from 1200 px; anything unreadable is Reading, which renders nothing.
+  // `--wr-page-px` reaches <html> as an inline style attribute, which the CSP allows through `style-src-attr 'unsafe-inline'`
+  // (src/lib/security-headers.ts, R-1); `page-width-csp.test.ts` fails if that allowance goes while this attribute is emitted.
+  const pageWidth = parsePageWidth(cookieStore.get(PAGE_WIDTH_COOKIE)?.value);
+  const width = documentWidth(pageWidth);
+  const htmlStyle = width.px === undefined ? undefined : ({ "--wr-page-px": width.px } as React.CSSProperties);
 
   return (
-    <html lang={locale} className={fontVariableClasses} data-theme={themeAttribute(theme)}>
+    <html lang={locale} className={fontVariableClasses} data-theme={themeAttribute(theme)} data-page-width={width.attribute} style={htmlStyle}>
       <body>
         {/* The first element in the document, so "Skip to content" is the first Tab stop on every screen (US-176). */}
         <SkipLink label={tSkip("label")} />
         <NonceBridge nonce={nonce} />
         <NextIntlClientProvider messages={messages}>
-          <ThemeProvider choice={theme}>{children}</ThemeProvider>
+          <ThemeProvider choice={theme}>
+            <PageWidthProvider choice={pageWidth}>{children}</PageWidthProvider>
+          </ThemeProvider>
         </NextIntlClientProvider>
       </body>
     </html>
