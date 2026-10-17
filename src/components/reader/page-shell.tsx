@@ -13,6 +13,7 @@ import { AppSettingsMenu } from "@/components/app-settings-menu";
 import { AllProperties } from "./all-properties";
 import { HeadingAnchorCopy } from "./heading-anchor-copy";
 import { OnThisPage } from "./on-this-page";
+import { OutlinePopover } from "./outline-popover";
 import { showsOutline } from "./outline-tree";
 import { PageBar } from "./page-bar";
 import { buildPageCrumbs } from "./page-crumbs";
@@ -116,6 +117,7 @@ export function PageShell({ wikiId, wiki, sha, tree, activePath, pageTitle, stal
             <>
               <NavToggle />
               <SearchCommandDialog wikiId={wikiId} sha={sha} copy={searchCopy} />
+              {hasToc ? <OutlinePopover outline={outline} /> : null}
             </>
           }
         >

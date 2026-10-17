@@ -39,9 +39,16 @@ describe("OnThisPage (US-219)", () => {
     expect(out).not.toMatch(/<details[^>]*\bopen\b/);
     expect(out).not.toContain("<nav");
   });
+  it("the popover copy (US-282) is a nav named by its own title id, holds the same entries in order, and does not print-hide itself", () => {
+    const out = html(createElement(OnThisPage, { outline: SIX, variant: "popover" }));
+    expect(out).toMatch(/^<nav class="wr-toc wr-toc--popover" aria-labelledby="toc-title-popover" data-testid="toc-popover">/);
+    expect(out).toContain('<p class="wr-toc__title" id="toc-title-popover">On this page</p>');
+    expect([...out.matchAll(/<a href="#([^"]+)"/g)].map((m) => m[1])).toEqual(SIX.map((x) => x.id));
+    expect(out).not.toContain("toc-title-rail");
+  });
   it("renders no mark on the server even when the store holds a section (the server snapshot is null, so hydration matches)", () => {
     setCurrentSection("user-content-c");
-    for (const variant of ["rail", "folded"] as const) {
+    for (const variant of ["rail", "folded", "popover"] as const) {
       expect(html(createElement(OnThisPage, { outline: SIX, variant }))).not.toContain("aria-current");
     }
   });
@@ -84,6 +91,21 @@ describe("PageShell mounts (US-219, E3-D5)", () => {
       expect(out).not.toContain("anchor-status");
       expect(out).not.toContain("On this page");
       expect(out).not.toContain("reader-rail");
+    }
+  });
+  it("US-282: the outline button sits right after search, is named 'On this page', hides from 1200px and in print; the closed popover renders no list", () => {
+    const out = shell({ outline: SIX });
+    expect(out.match(/data-testid="outline-trigger"/g)).toHaveLength(1);
+    expect(out.indexOf('data-testid="search-trigger"')).toBeLessThan(out.indexOf('data-testid="outline-trigger"'));
+    const button = out.match(/<button[^>]*data-testid="outline-trigger"[^>]*>/)?.[0] ?? "";
+    expect(button).toContain('aria-label="On this page"');
+    expect(button).toContain("min-[1200px]:hidden");
+    expect(button).toContain("print:hidden");
+    expect(out).not.toContain('data-testid="toc-popover"');
+  });
+  it("US-282: no button without an outline of three or more entries", () => {
+    for (const props of [{}, { outline: [] }, { outline: [e(2, "a"), e(2, "b")] }]) {
+      expect(shell(props)).not.toContain("outline-trigger");
     }
   });
 });

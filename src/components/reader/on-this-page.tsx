@@ -18,8 +18,20 @@ import { getCurrentSection, getServerSection, pinSection, subscribeSection } fro
  * Entries are plain `<a href="#<id>">` (they jump without script; the id is the one the heading, its anchor and a wikilink share).
  * The current entry has `aria-current="location"`, the selection wash and bold (`wr-reader.css`), so colour is never the only
  * cue. A click marks its entry at once and holds it until the reader next scrolls (`pinSection`). Neither copy prints.
+ *
+ * US-282: a third copy, `popover`, renders only inside the top bar's popover (`OutlinePopover`, opened on demand below 1200px, so it
+ * is client-only and never in the server HTML). It is the rail's markup with its own title id; `onNavigate` closes the popover.
  */
-export function OnThisPage({ outline, variant }: { outline: readonly OutlineEntry[]; variant: "rail" | "folded" }) {
+export function OnThisPage({
+  outline,
+  variant,
+  onNavigate,
+}: {
+  outline: readonly OutlineEntry[];
+  variant: "rail" | "folded" | "popover";
+  /** The `popover` copy only (US-282): called after an entry is chosen, so the popover can close. */
+  onNavigate?: () => void;
+}) {
   const t = useTranslations("onThisPage");
   const current = useSyncExternalStore(subscribeSection, getCurrentSection, getServerSection);
   const link = (entry: OutlineEntry) => (
@@ -27,7 +39,10 @@ export function OnThisPage({ outline, variant }: { outline: readonly OutlineEntr
       href={`#${entry.id}`}
       aria-current={current === entry.id ? "location" : undefined}
       data-toc={entry.id}
-      onClick={() => pinSection(entry.id)}
+      onClick={() => {
+        pinSection(entry.id);
+        onNavigate?.();
+      }}
     >
       {entry.text}
     </a>
@@ -49,6 +64,16 @@ export function OnThisPage({ outline, variant }: { outline: readonly OutlineEntr
         <summary>{t("title")}</summary>
         {list}
       </details>
+    );
+  }
+  if (variant === "popover") {
+    return (
+      <nav className="wr-toc wr-toc--popover" aria-labelledby="toc-title-popover" data-testid="toc-popover">
+        <p className="wr-toc__title" id="toc-title-popover">
+          {t("title")}
+        </p>
+        {list}
+      </nav>
     );
   }
   return (

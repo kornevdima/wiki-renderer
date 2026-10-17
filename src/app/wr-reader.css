@@ -117,30 +117,30 @@ tt,
  * bold as well as `aria-current="location"`, so colour is never the only cue. An aside that holds only the list shows nowhere
  * below 1200px (its list is the hidden copy) and never prints.
  */
-.wr-layout .wr-toc li,
-.wr-layout .wr-toc li + li {
+:is(.wr-layout, .wr-toc-pop) .wr-toc li,
+:is(.wr-layout, .wr-toc-pop) .wr-toc li + li {
     margin: 0;
 }
-.wr-layout .wr-toc__title {
+:is(.wr-layout, .wr-toc-pop) .wr-toc__title {
     margin: 0 0 var(--space-8);
     color: var(--foreground);
     font-size: 0.875rem;
     line-height: 1.25rem;
     font-weight: 600;
 }
-.wr-layout .wr-toc ul {
+:is(.wr-layout, .wr-toc-pop) .wr-toc ul {
     display: grid;
     gap: 2px;
     margin: 0;
     padding: 0;
     list-style: none;
 }
-.wr-layout .wr-toc ul ul {
+:is(.wr-layout, .wr-toc-pop) .wr-toc ul ul {
     margin-top: 2px;
     padding-left: var(--space-12);
     list-style: none;
 }
-.wr-layout .wr-toc a {
+:is(.wr-layout, .wr-toc-pop) .wr-toc a {
     display: block;
     padding: calc(var(--space-8) / 2) var(--space-8);
     border-radius: var(--ds-radius-sm);
@@ -150,17 +150,17 @@ tt,
     text-decoration: none;
     overflow-wrap: anywhere;
 }
-.wr-layout .wr-toc a:hover {
+:is(.wr-layout, .wr-toc-pop) .wr-toc a:hover {
     background: var(--hover-overlay);
     color: var(--foreground);
     text-decoration: none;
 }
-.wr-layout .wr-toc a:focus-visible {
+:is(.wr-layout, .wr-toc-pop) .wr-toc a:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: -2px;
     text-decoration: none;
 }
-.wr-layout .wr-toc a[aria-current="location"] {
+:is(.wr-layout, .wr-toc-pop) .wr-toc a[aria-current="location"] {
     background: var(--surface-selected);
     color: var(--primary-text);
     font-weight: 700;
@@ -188,6 +188,24 @@ tt,
 }
 .wr-layout .wr-toc--inline > ul {
     margin: 0 0 var(--space-12);
+}
+/* US-282: the popover copy. The popover is portaled to <body>, outside .wr-layout, so the list's shared rules above name .wr-toc-pop
+   as well. Only what is the popover's own is here: a flex column capped at 60dvh whose list scrolls, and 40px entries. */
+.wr-toc-pop .wr-toc--popover {
+    display: flex;
+    flex-direction: column;
+    max-height: 60dvh;
+    min-height: 0;
+}
+.wr-toc-pop .wr-toc--popover > ul {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    min-height: 0;
+}
+.wr-toc-pop .wr-toc--popover a {
+    display: flex;
+    align-items: center;
+    min-height: 40px;
 }
 @media (min-width: 1200px) {
     .wr-layout .wr-toc--rail {
@@ -327,6 +345,7 @@ tt,
     /* Neither the list, its folded copy nor the anchors print; an anchor with no icon and no text must not reserve space. An aside
        that holds only the list is hidden whole, so no empty box is left (US-219). */
     .wr-toc,
+    .wr-toc-pop,
     .wr-prose a.heading-anchor,
     .wr-rail:not(:has(.wr-properties)) {
         display: none !important;

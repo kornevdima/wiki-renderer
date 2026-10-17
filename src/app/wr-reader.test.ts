@@ -162,7 +162,7 @@ describe("On this page and heading anchors (US-219)", () => {
   });
 
   it("the current entry has the selection wash and bold as well as aria-current, so colour is not alone", () => {
-    const body = ruleBody(reader, '.wr-layout .wr-toc a[aria-current="location"]');
+    const body = ruleBody(reader, ':is(.wr-layout,.wr-toc-pop) .wr-toc a[aria-current="location"]');
     expect(body).toMatch(/background:\s*var\(--surface-selected\)/);
     expect(body).toMatch(/font-weight:\s*700/);
   });
@@ -170,8 +170,21 @@ describe("On this page and heading anchors (US-219)", () => {
   it("the list rules out-rank the article's .wr-prose rules the folded copy sits under", () => {
     const screen = reader.slice(0, reader.indexOf("@media print"));
     for (const [selectors] of rules(screen).filter(([sel]) => sel.some((s) => s.includes(".wr-toc")))) {
-      for (const s of selectors) expect(s, s).toMatch(/^\.wr-layout /);
+      // `rules()` splits on commas, so a `:is(.wr-layout, .wr-toc-pop)` group arrives as two fragments.
+      for (const s of selectors) expect(s, s).toMatch(/^(\.wr-layout |:is\(\.wr-layout$|\.wr-toc-pop\) |\.wr-toc-pop )/);
     }
+  });
+
+  it("the popover copy keeps its own rules: the 60dvh cap, the list scrolling inside it, and 40px entries (US-282)", () => {
+    const pop = ruleBody(reader, ".wr-toc-pop .wr-toc--popover");
+    expect(pop).toMatch(/display:\s*flex/);
+    expect(pop).toMatch(/flex-direction:\s*column/);
+    expect(pop).toMatch(/max-height:\s*60dvh/);
+    expect(pop).toMatch(/min-height:\s*0/);
+    const list = ruleBody(reader, ".wr-toc-pop .wr-toc--popover > ul");
+    expect(list).toMatch(/overflow-y:\s*auto/);
+    expect(list).toMatch(/overscroll-behavior:\s*contain/);
+    expect(ruleBody(reader, ".wr-toc-pop .wr-toc--popover a")).toMatch(/min-height:\s*40px/);
   });
 
   it("the anchor styles out-rank .wr-prose a (underline, link colour, focus) and the icon is a mask file, not an inline SVG", () => {
@@ -201,7 +214,7 @@ describe("On this page and heading anchors (US-219)", () => {
     const start = reader.indexOf("@media print");
     const print = reader.slice(start);
     const hidden = rules(print).find(([sel]) => sel.includes(".wr-toc"));
-    expect(hidden?.[0]).toEqual([".wr-toc", ".wr-prose a.heading-anchor", ".wr-rail:not(:has(.wr-properties))"]);
+    expect(hidden?.[0]).toEqual([".wr-toc", ".wr-toc-pop", ".wr-prose a.heading-anchor", ".wr-rail:not(:has(.wr-properties))"]);
     expect(hidden?.[1]).toMatch(/display:\s*none/);
   });
 });
