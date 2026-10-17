@@ -338,6 +338,18 @@ tt,
     .wr-layout--aside {
         grid-template-columns: minmax(0, 1fr);
     }
+    /* BUG-061: Chromium paginates the one-column grid with a trailing empty page, so both print as blocks. The column needs no margin: its
+       other children (the stale notice, the page bar) are print:hidden, so the layout is its only printed child, and a hidden grid item made no
+       gap. The layout's article and rail get the gap back as a margin. */
+    .wr-column,
+    .wr-column:has(.wr-layout--aside),
+    .wr-layout,
+    .wr-layout--aside {
+        display: block;
+    }
+    .wr-layout > * + * {
+        margin-top: var(--space-32);
+    }
     /* The rail prints in the flow, and All properties prints open (R-4): a closed details slots its body into ::details-content
        with content-visibility: hidden, which this undoes (BUG-040, the same mechanism as .wr-prose details). */
     .wr-rail {
