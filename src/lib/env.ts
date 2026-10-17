@@ -26,6 +26,8 @@ const schema = z.object({
   WIKI_SNAPSHOT_STALE_NOTICE_MS: z.coerce.number().int().nonnegative().default(0),
   // "true" hides Edit and refuses saves: the reader never writes to a wiki folder.
   WIKI_READ_ONLY: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  // "true" prints the h1 the reader injects from the file name (no frontmatter title, no leading h1); off, it shows on screen only (US-284).
+  WIKI_PRINT_FILE_TITLE: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
 
   // ── Branding (optional; `src/lib/branding.ts`) ─────────────────────────
   BRAND_NAME: z.string().trim().min(1).default("Wiki Renderer"),

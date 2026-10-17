@@ -41,9 +41,14 @@ function readFrontmatter(ast: MdastRoot): Record<string, unknown> {
   }
 }
 
-function readTitle(frontmatter: Record<string, unknown>, path: string): string {
+/** True when the frontmatter carries a usable `title` (a non-blank string); otherwise the title is the file name stem. */
+export function hasFrontmatterTitle(frontmatter: Record<string, unknown>): boolean {
   const candidate = frontmatter.title;
-  if (typeof candidate === "string" && candidate.trim() !== "") return candidate;
+  return typeof candidate === "string" && candidate.trim() !== "";
+}
+
+function readTitle(frontmatter: Record<string, unknown>, path: string): string {
+  if (hasFrontmatterTitle(frontmatter)) return frontmatter.title as string;
   return filenameStem(path);
 }
 

@@ -173,3 +173,73 @@ test.describe("BUG-061 print", () => {
     });
   }
 });
+
+// US-284 (wiki/contracts/US-284-print-file-title-contract.md R1-R5): the h1 injected from the file name stem is left out of print;
+// a frontmatter-title h1 and a body's own h1 still print. R6 (the env parse) is the unit test in src/lib/env.test.ts.
+// R4 needs a second server started with WIKI_PRINT_FILE_TITLE=true, named by E2E_PRINT_FILE_TITLE_URL, e.g.
+//   WIKI_PRINT_FILE_TITLE=true WIKI_DIRS="sample=tests/fixtures/sample-wiki,second=tests/fixtures/second-wiki" WIKI_RECHECK_MS=0 \
+//     npx next dev --hostname 127.0.0.1 --port 3301
+//   E2E_BASE_URL=http://127.0.0.1:3300 E2E_PRINT_FILE_TITLE_URL=http://127.0.0.1:3301 npx playwright test tests/e2e/print.spec.ts -g "US-284"
+const NO_TITLE = "/w/sample/guides/Untitled%20file%20name.md"; // (a) no frontmatter title, no leading h1: h1 "Untitled file name" is injected
+const FM_TITLE = "/w/sample/guides/Titled%20by%20frontmatter.md"; // (b) frontmatter title, no leading h1: h1 is injected from the title
+const OWN_H1 = "/w/sample/guides/Own%20body%20heading.md"; // (c) the body starts with its own h1
+const PRINT_FILE_TITLE_URL = process.env.E2E_PRINT_FILE_TITLE_URL;
+
+async function readyAndHeading(page: Page, path: string) {
+  await page.goto(path);
+  await expect(page.getByTestId("reader-content")).toBeVisible();
+  // A CSS locator: a `display: none` h1 leaves the accessibility tree, so a role locator could not find it to assert it hidden.
+  return page.locator("h1");
+}
+
+test.describe("US-284 print file-name heading", () => {
+  test("R1: the file-name h1 shows on screen and is not rendered in print", async ({ page }) => {
+    const h1 = await readyAndHeading(page, NO_TITLE);
+    await expect(h1).toHaveCount(1);
+    await expect(h1).toHaveText("Untitled file name");
+    await expect(h1).toBeVisible();
+    await page.emulateMedia({ media: "print" });
+    await expect(h1).toBeHidden();
+    expect(await h1.evaluate((el) => getComputedStyle(el).display)).toBe("none");
+  });
+
+  test("R2: a frontmatter-title h1 prints", async ({ page }) => {
+    const h1 = await readyAndHeading(page, FM_TITLE);
+    await page.emulateMedia({ media: "print" });
+    await expect(h1).toHaveCount(1);
+    await expect(h1).toHaveText("Frontmatter title page");
+    await expect(h1).toBeVisible();
+  });
+
+  test("R3: the body's own h1 prints", async ({ page }) => {
+    const h1 = await readyAndHeading(page, OWN_H1);
+    await page.emulateMedia({ media: "print" });
+    await expect(h1).toHaveCount(1);
+    await expect(h1).toHaveText("Body own heading");
+    await expect(h1).toBeVisible();
+  });
+
+  test("R4: with WIKI_PRINT_FILE_TITLE=true the file-name h1 prints", async ({ page }) => {
+    test.skip(
+      !PRINT_FILE_TITLE_URL,
+      "E2E_PRINT_FILE_TITLE_URL not set: start a server with WIKI_PRINT_FILE_TITLE=true (see the comment above NO_TITLE) and point this variable at it",
+    );
+    const h1 = await readyAndHeading(page, `${PRINT_FILE_TITLE_URL}${NO_TITLE}`);
+    await expect(h1).toHaveText("Untitled file name");
+    await page.emulateMedia({ media: "print" });
+    await expect(h1).toBeVisible();
+  });
+
+  // The meta line prints and the folded outline does not (print:hidden), whatever happens to the heading before them.
+  for (const [name, path] of [["no title", NO_TITLE], ["frontmatter title", FM_TITLE], ["own h1", OWN_H1]] as const) {
+    test(`R5: ${name}: the meta line prints and the folded outline stays out of print`, async ({ page }) => {
+      await page.setViewportSize({ width: 800, height: 900 }); // below 1200 px the folded outline shows, the rail's copy does not
+      await readyAndHeading(page, path);
+      await expect(page.getByTestId("page-meta")).toBeVisible();
+      await expect(page.getByTestId("toc-inline")).toBeVisible();
+      await page.emulateMedia({ media: "print" });
+      await expect(page.getByTestId("page-meta")).toBeVisible();
+      await expect(page.getByTestId("toc-inline")).toBeHidden();
+    });
+  }
+});

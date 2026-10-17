@@ -25,6 +25,7 @@ import {
   requestedHref,
   resolveRequestedPath,
 } from "@/components/reader/wiki-path";
+import { hasFrontmatterTitle } from "@/content/render/parse";
 import { renderPage } from "@/content/render/render";
 import { findWiki, getSnapshot } from "@/content/runtime";
 import { hashText } from "@/content/runtime/local-write";
@@ -179,6 +180,9 @@ export default async function WikiPage({
 
   const ast = snapshot.pages.get(requested.path)?.ast;
   const showTitleHeading = ast === undefined || !bodyStartsWithH1(ast);
+  // US-284: the injected h1 made from the file name (no frontmatter title) does not print, unless WIKI_PRINT_FILE_TITLE.
+  const pageFrontmatter = snapshot.pages.get(requested.path)?.frontmatter;
+  const titleFromFileName = !(pageFrontmatter && hasFrontmatterTitle(pageFrontmatter));
 
   // The server phase, written only here, on the rendered-page return.
   emitServerTiming(log, "rendered", wikiId, startedAt, nowMs());
@@ -188,7 +192,7 @@ export default async function WikiPage({
       <DocumentTitle screen={rendered.title} wiki={wiki.name} />
       {/* US-220: the meta line follows the page's h1, the injected title or the body's own leading h1 (`leadHeading`). */}
       <Fragment key={rendered.path}>
-        {showTitleHeading ? <h1>{rendered.title}</h1> : rendered.leadHeading}
+        {showTitleHeading ? <h1 className={titleFromFileName && !env.WIKI_PRINT_FILE_TITLE ? "wr-file-title" : undefined}>{rendered.title}</h1> : rendered.leadHeading}
         <PageMeta fields={rendered.frontmatterView} />
         {/* US-219: the folded "On this page" list, under the meta line; the rail's copy is `PageShell`'s. CSS shows one per width. */}
         {showsOutline(rendered.outline) ? <OnThisPage outline={rendered.outline} variant="folded" /> : null}

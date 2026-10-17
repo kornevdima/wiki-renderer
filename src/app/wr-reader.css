@@ -331,6 +331,14 @@ tt,
     .wr-rail:not(:has(.wr-properties)) {
         display: none !important;
     }
+    /* US-284: the h1 injected from the file name stays on screen and is left out of print. !important beats the unlayered prose and
+       Tailwind h1 styles, as the sibling hides above do. The meta line then comes first, so it gives back its tuck-under-the-h1 margin. */
+    h1.wr-file-title {
+        display: none !important;
+    }
+    h1.wr-file-title + .wr-meta {
+        margin-top: 0;
+    }
     .wr-column,
     .wr-column:has(.wr-layout--aside) {
         max-width: none;
