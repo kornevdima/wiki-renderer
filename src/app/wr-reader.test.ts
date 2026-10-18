@@ -142,6 +142,14 @@ describe("the page meta line, the rail and All properties (US-220)", () => {
     expect(ruleBody(print, ".wr-properties > summary::before")).toMatch(/display:\s*none/);
   });
 
+  it("print keeps All properties whole on a plain wrapper and the dl as well as the details (BUG-066, Safari)", () => {
+    const print = printBlock();
+    expect(ruleBody(print, ".wr-properties-block,.wr-properties > dl")).toMatch(/break-inside:\s*avoid/);
+    expect(ruleBody(print, ".wr-properties")).toMatch(/break-inside:\s*avoid/);
+    expect(ruleBody(print, ".wr-rail")).toMatch(/display:\s*flow-root/);
+    expect(read(join(SRC, "components", "reader", "all-properties.tsx"))).toMatch(/<div className="wr-properties-block/);
+  });
+
   it("the disclosure is never server-rendered open, and no beforeprint handler exists unless the print check proved the CSS fails", () => {
     const source = stripComments(read(join(SRC, "components", "reader", "all-properties.tsx")).replace(/\/\*[\s\S]*?\*\//g, ""));
     expect(source).not.toMatch(/\bopen\b\s*[={]/);

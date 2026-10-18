@@ -28,6 +28,9 @@ import { CHIP, CHIPS } from "./tag-chip-classes";
  * shows as chips (`tagChips`, the same chips as the meta line); wikilinks keep the link colour and the unavailable marker its
  * muted dotted underline.
  *
+ * The `details` sits in a plain block `div` (`wr-properties-block`): WebKit does not keep a `details` whole across a page break
+ * (BUG-066), so print puts `break-inside: avoid` on that wrapper and the `dl` too (`wr-reader.css`).
+ *
  * The input is `frontmatterView` as US-071 built it (bounded, `(truncated)` markers inline). A cut key list ends in a
  * sentinel field that `propertyRows` turns into a visible mark after the list. No fields, no disclosure.
  */
@@ -105,6 +108,7 @@ export function AllProperties({ fields }: AllPropertiesProps) {
   const { rows, count, truncated } = propertyRows(fields);
 
   return (
+    <div className="wr-properties-block min-w-0">
     <details data-testid="frontmatter-panel" className="wr-properties min-w-0">
       <summary className="text-sm leading-5">
         {t("title")}
@@ -138,5 +142,6 @@ export function AllProperties({ fields }: AllPropertiesProps) {
       </dl>
       {truncated ? <p className="m-0 pb-3 text-sm leading-5 text-muted-foreground">{TRUNCATED}</p> : null}
     </details>
+    </div>
   );
 }

@@ -19,7 +19,9 @@ import { PageShell } from "./page-shell";
 function html(element: ReactElement): string {
   return renderToStaticMarkup(createElement(NextIntlClientProvider, { locale: "en", timeZone: "UTC", messages, children: element }));
 }
-const rawPanel = (fm: Record<string, unknown>) => html(createElement(AllProperties, { fields: buildFrontmatterView(fm) }));
+const wrapped = (fm: Record<string, unknown>) => html(createElement(AllProperties, { fields: buildFrontmatterView(fm) }));
+/** BUG-066: the disclosure sits in one plain block wrapper; these specs read the markup inside it. */
+const rawPanel = (fm: Record<string, unknown>) => wrapped(fm).replace(/^<div class="wr-properties-block[^"]*">([\s\S]*)<\/div>$/, "$1");
 /** The structure only (US-188 gave the markup its look): no `class` attributes. */
 const bare = (markup: string) => markup.replace(/ class="[^"]*"/g, "");
 const panel = (fm: Record<string, unknown>) => bare(rawPanel(fm));
@@ -69,6 +71,14 @@ describe("P1 (US-108 S1): five pairs in source order, nested lists, empty, trunc
     expect(o).not.toContain("<dt>(truncated)</dt>");
     expect(o).toContain("<span>100</span></summary>");
     expect(o).toMatch(/<\/dl><p>\(truncated\)<\/p><\/details>$/);
+  });
+});
+
+describe("BUG-066: a plain block wrapper around the disclosure", () => {
+  it("renders the details inside exactly one div.wr-properties-block, and nothing else around it", () => {
+    const out = wrapped({ title: "T" });
+    expect(out).toMatch(/^<div class="wr-properties-block[^"]*"><details data-testid="frontmatter-panel"[\s\S]*<\/details><\/div>$/);
+    expect(out.match(/wr-properties-block/g)).toHaveLength(1);
   });
 });
 

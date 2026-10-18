@@ -383,10 +383,21 @@ tt,
         position: static;
         max-height: none;
         overflow: visible;
+        /* BUG-066: a block flow, not a grid, so the wrapper below is a plain block WebKit fragments by break-inside. flow-root (not block)
+           keeps the wrapper's margin from collapsing through the rail, so the printed gap is the grid's: the same 24px. */
+        display: flow-root;
+    }
+    /* BUG-066: Safari split the block across two pages. WebKit fragments a plain block reliably but a <details> (its slotted body) not,
+       so the wrapper div and the dl carry the rule as well as the details, with the legacy page-break alias. */
+    .wr-properties-block,
+    .wr-properties > dl {
+        break-inside: avoid;
+        page-break-inside: avoid;
     }
     .wr-properties {
         margin-top: var(--space-24);
         break-inside: avoid;
+        page-break-inside: avoid;
     }
     .wr-properties > summary::before {
         display: none;
