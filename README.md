@@ -18,6 +18,7 @@ cp .env.local.example .env.local
 ```
 
 Open `.env.local` and set `WIKI_DIRS` to your wiki's folder, for example `WIKI_DIRS=notes=~/notes/wiki`.
+The wiki list can also live in a config file in your user config folder (`WIKI_RENDERER_CONFIG` names it), which `WIKI_DIRS` overrides: see `.env.local.example` and `AGENTS.md`.
 Then start the app:
 
 ```bash

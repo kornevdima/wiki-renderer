@@ -9,15 +9,15 @@ const blankAsUnset = z.preprocess(
 );
 
 /**
- * Zod-validated environment schema. Only `WIKI_DIRS` is required: every other variable has a code default.
+ * Zod-validated environment schema. Nothing is required: every variable has a code default or is optional. The wiki list comes from the config file unless `WIKI_DIRS` is set (US-276).
  * `.env.local.example` documents each one.
  */
 const schema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 
   // ── Content ─────────────────────────────────────────────────────────────
-  // Comma-separated `id=folder` pairs, or bare folders (`content/runtime/config.ts`).
-  WIKI_DIRS: z.string().trim().min(1, "WIKI_DIRS must name at least one wiki folder"),
+  // Optional override of the config file's wiki list: comma-separated `id=folder` pairs, or bare folders (`content/runtime/config.ts`).
+  WIKI_DIRS: blankAsUnset.pipe(z.string().trim().min(1).optional()),
   // How often a request re-fingerprints a wiki folder; within the window the cached snapshot is served as is.
   WIKI_RECHECK_MS: z.coerce.number().int().nonnegative().default(1000),
   // Total bytes one wiki may load into memory.
@@ -27,7 +27,8 @@ const schema = z.object({
   // "true" hides Edit and refuses saves: the reader never writes to a wiki folder.
   WIKI_READ_ONLY: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
   // "true" prints the h1 the reader injects from the file name (no frontmatter title, no leading h1); off, it shows on screen only (US-284).
-  WIKI_PRINT_FILE_TITLE: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  // No default: unset means "use the config file's printFileTitle" (US-276); when set it wins.
+  WIKI_PRINT_FILE_TITLE: blankAsUnset.pipe(z.enum(["true", "false"]).optional()).transform((value) => (value === undefined ? undefined : value === "true")),
 
   // ── Branding (optional; `src/lib/branding.ts`) ─────────────────────────
   BRAND_NAME: z.string().trim().min(1).default("Wiki Renderer"),

@@ -1,4 +1,4 @@
-import { BookIcon } from "lucide-react";
+import { BookIcon, LibraryBigIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -8,10 +8,12 @@ import { brandProps } from "@/components/brand-props";
 import { Brand } from "@/components/layout/brand";
 import { MAIN_REGION, PAGE_CONTENT_CLASS } from "@/components/layout/main-region";
 import { PageHeader } from "@/components/layout/page-header";
+import { Alert } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Topbar } from "@/components/layout/topbar";
 import { AppSettingsMenu } from "@/components/app-settings-menu";
 import { documentTitle } from "@/components/reader/document-title";
-import { listWikis } from "@/content/runtime";
+import { getWikiList } from "@/content/runtime";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("home");
@@ -24,8 +26,8 @@ export async function generateMetadata(): Promise<Metadata> {
  * snapshot, so the listing is instant however large the vaults are.
  */
 export default async function Home() {
-  const wikis = listWikis();
-  if (wikis.length === 1) redirect(`/w/${wikis[0]!.id}`);
+  const { wikis, error, configPath } = getWikiList();
+  if (wikis.length === 1 && !error) redirect(`/w/${wikis[0]!.id}`);
 
   const t = await getTranslations("home");
   const tListing = await getTranslations("homeListing");
@@ -38,6 +40,23 @@ export default async function Home() {
       </Topbar>
       <main {...MAIN_REGION} className={PAGE_CONTENT_CLASS}>
         <PageHeader title={t("heading")} meta={[{ text: t("tagline") }]} />
+        {error ? (
+          <Alert variant="danger" title={t("errorTitle")} data-testid="config-error">
+            <p className="m-0 [overflow-wrap:anywhere]">{error}</p>
+            {wikis.length > 0 ? <p className="m-0 mt-1">{t("errorKeep")}</p> : null}
+          </Alert>
+        ) : null}
+        {wikis.length === 0 && !error ? (
+          <EmptyState
+            data-testid="no-wikis"
+            icon={<LibraryBigIcon />}
+            title={t("emptyTitle")}
+            titleAs="h2"
+            text={t("emptyText")}
+            detail={<span data-testid="config-path">{configPath}</span>}
+          />
+        ) : null}
+        {wikis.length > 0 ? (
         <section aria-labelledby="wiki-list-heading" className="grid gap-3">
           <h2 id="wiki-list-heading" className="m-0 text-base font-semibold">
             {tListing("heading")}
@@ -59,6 +78,7 @@ export default async function Home() {
             ))}
           </ul>
         </section>
+        ) : null}
       </main>
     </div>
   );

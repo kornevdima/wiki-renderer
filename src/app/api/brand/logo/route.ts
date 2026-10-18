@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+import { resolveFolder } from "@/content/runtime/config";
 import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
@@ -15,13 +16,12 @@ const TYPES: Record<string, string> = {
 
 /**
  * `GET /api/brand/logo`: the `BRAND_LOGO` file, when one is configured (`src/lib/branding.ts`). Relative paths resolve
- * from the working directory and `~/` from HOME, like `WIKI_DIRS`. An SVG is sandboxed as the asset route does.
+ * from the working directory and `~/` from the home folder (`os.homedir()`), like the wiki folders. An SVG is sandboxed as the asset route does.
  */
 export async function GET(): Promise<Response> {
   const configured = env.BRAND_LOGO;
   if (configured === undefined) return new Response(null, { status: 404 });
-  const file =
-    configured.startsWith("~/") && process.env.HOME ? path.join(process.env.HOME, configured.slice(2)) : path.resolve(configured);
+  const file = resolveFolder(configured, process.cwd());
   const type = TYPES[path.extname(file).toLowerCase()];
   if (type === undefined) return new Response(null, { status: 404 });
   try {

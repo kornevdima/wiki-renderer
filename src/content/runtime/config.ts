@@ -1,10 +1,11 @@
+import os from "node:os";
 import path from "node:path";
 
 /**
  * The wikis this instance serves, from `WIKI_DIRS`: comma-separated `id=folder` pairs, e.g.
  * `notes=../notes/wiki,engineering=~/code/engineering/wiki`. A bare folder (no `=`) takes its
  * id from the folder name, or from the parent's when the folder is called `wiki`. Relative folders resolve against the
- * process's working directory; a leading `~/` against `HOME`. Order is kept: the first wiki is the home redirect target
+ * process's working directory; a leading `~/` against `os.homedir()` (so it works on Windows too). Order is kept: the first wiki is the home redirect target
  * when it is the only one.
  */
 export interface LocalWiki {
@@ -14,6 +15,11 @@ export interface LocalWiki {
 }
 
 const ID = /^[a-z0-9][a-z0-9-]*$/;
+
+/** The wiki id rule: lowercase letters, digits and dashes, starting with a letter or digit. */
+export function checkWikiId(id: string): boolean {
+  return ID.test(id);
+}
 
 export class WikiConfigError extends Error {
   constructor(message: string) {
@@ -37,15 +43,13 @@ function displayName(id: string): string {
     .join(" ");
 }
 
-function resolveFolder(raw: string, cwd: string, home: string | undefined): string {
-  if (raw === "~" || raw.startsWith("~/")) {
-    if (!home) throw new WikiConfigError(`WIKI_DIRS: "${raw}" uses ~ but HOME is not set`);
-    return path.resolve(home, raw.slice(2));
-  }
+/** Resolves a folder as written: `~` / `~/x` against the home folder (`os.homedir()`), else against `cwd`. Also `BRAND_LOGO`'s rule. */
+export function resolveFolder(raw: string, cwd: string, home: string = os.homedir()): string {
+  if (raw === "~" || raw.startsWith("~/") || raw.startsWith("~\\")) return path.resolve(home, raw.slice(2));
   return path.resolve(cwd, raw);
 }
 
-export function parseWikiDirs(value: string, cwd: string, home?: string): LocalWiki[] {
+export function parseWikiDirs(value: string, cwd: string, home: string = os.homedir()): LocalWiki[] {
   const wikis: LocalWiki[] = [];
   for (const part of value.split(",").map((p) => p.trim()).filter(Boolean)) {
     const eq = part.indexOf("=");
@@ -59,7 +63,7 @@ export function parseWikiDirs(value: string, cwd: string, home?: string): LocalW
     } else {
       id = part.slice(0, eq).trim();
     }
-    if (!ID.test(id)) throw new WikiConfigError(`WIKI_DIRS: id "${id}" must be lowercase letters, digits and dashes`);
+    if (!checkWikiId(id)) throw new WikiConfigError(`WIKI_DIRS: id "${id}" must be lowercase letters, digits and dashes`);
     if (wikis.some((w) => w.id === id)) throw new WikiConfigError(`WIKI_DIRS: id "${id}" is listed twice`);
     wikis.push({ id, name: displayName(id), root });
   }

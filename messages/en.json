@@ -1,7 +1,11 @@
 {
   "home": {
     "heading": "Wikis",
-    "tagline": "Obsidian-flavoured Markdown folders on this machine, rendered read-only."
+    "tagline": "Obsidian-flavoured Markdown folders on this machine, rendered read-only.",
+    "emptyTitle": "No wikis yet",
+    "emptyText": "Add a wiki to this config file, then reload the page. No restart needed.",
+    "errorTitle": "The config file has a problem",
+    "errorKeep": "The last good list stays in use until it is fixed."
   },
   "homeListing": {
     "heading": "Configured wikis"

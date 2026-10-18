@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { parseWikiDirs, WikiConfigError } from "./config";
+import { parseWikiDirs, resolveFolder, WikiConfigError } from "./config";
 
 describe("parseWikiDirs", () => {
   it("reads id=folder pairs in order, resolving relative folders against cwd and ~ against HOME", () => {
@@ -23,9 +23,27 @@ describe("parseWikiDirs", () => {
     ["Bad Id=/x", "must be lowercase"],
     ["a=/x,a=/y", "listed twice"],
     ["a=", "has no folder"],
-    ["a=~/x", "HOME is not set"],
   ])("refuses %j", (value, message) => {
     expect(() => parseWikiDirs(value, "/", undefined)).toThrow(WikiConfigError);
     expect(() => parseWikiDirs(value, "/", undefined)).toThrow(message);
+  });
+});
+
+describe("~ resolution (US-276 R8)", () => {
+  it("resolves against os.homedir() when HOME is unset, for wiki roots and BRAND_LOGO's resolveFolder", async () => {
+    vi.resetModules();
+    vi.stubEnv("HOME", "");
+    vi.doMock("node:os", () => ({ default: { homedir: () => "/mock/home" }, homedir: () => "/mock/home" }));
+    const mod = await import("./config");
+    expect(mod.parseWikiDirs("n=~/notes", "/cwd")[0]!.root).toBe("/mock/home/notes");
+    expect(mod.resolveFolder("~", "/cwd")).toBe("/mock/home");
+    expect(mod.resolveFolder("~/logo.png", "/cwd")).toBe("/mock/home/logo.png");
+    vi.doUnmock("node:os");
+    vi.unstubAllEnvs();
+  });
+
+  it("leaves other paths on cwd", () => {
+    expect(resolveFolder("rel/x", "/cwd", "/h")).toBe("/cwd/rel/x");
+    expect(resolveFolder("/abs", "/cwd", "/h")).toBe("/abs");
   });
 });

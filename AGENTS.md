@@ -19,14 +19,25 @@ auth, admin, MongoDB and the GitHub App removed and a filesystem source added. I
 
 ```bash
 npm install
-cp .env.local.example .env.local         # set WIKI_DIRS
-npm run dev                              # http://127.0.0.1:3000
+npm run dev                              # http://127.0.0.1:3000; the wiki list comes from the config file
+cp .env.local.example .env.local         # developer path: set WIKI_DIRS (it overrides the file)
 WIKI_DIRS="notes=~/notes/wiki" npm run dev   # or inline
 ```
 
-`WIKI_DIRS` holds comma-separated `id=folder` pairs, or bare folders. A bare folder takes its id from the folder's name,
-or from its parent's name when the folder is called `wiki`. With one wiki, `/` redirects straight to it. With several,
-`/` lists them. Edits in the vault show on the next request after `WIKI_RECHECK_MS` (default 1 s): the folder is
+The wiki list lives in `config.json` in the user's config folder (macOS `~/Library/Application Support/wiki-renderer`,
+Linux `$XDG_CONFIG_HOME/wiki-renderer` else `~/.config/wiki-renderer`, Windows `%APPDATA%\wiki-renderer`);
+`WIKI_RENDERER_CONFIG` names another file. Shape: `{"wikis": [{"id", "name", "root"}], "printFileTitle": false}`, nothing
+else (branding stays build-time env). The file is re-read when its mtime changes (checked at most once per
+`WIKI_RECHECK_MS`), so a change shows without a restart; a removed wiki's caches are dropped. A relative `root` in the file resolves against the config file's folder (`WIKI_DIRS` entries resolve against the repo's working directory). Deleting the file empties the list. A missing file starts the
+server with an empty home page naming the path; a bad file keeps the last good list and the home page names the problem.
+`src/content/runtime/user-config.ts` is the one reader and atomic writer (`writeUserConfig`); `getWikiList()` in
+`runtime/index.ts` returns `{ wikis, source: "env" | "file", managedByEnv, configPath, error? }`.
+
+`WIKI_DIRS` is the override: when set, the file's wikis are ignored (`managedByEnv`) and a bad value exits at startup.
+It holds comma-separated `id=folder` pairs, or bare folders. A bare folder takes its id from the folder's name,
+or from its parent's name when the folder is called `wiki`; `~/` resolves from `os.homedir()` (Windows too). With one wiki, `/` redirects straight to it. With several,
+`/` lists them. `WIKI_PRINT_FILE_TITLE`, when set, wins over the file's `printFileTitle`. Edits in the vault
+show on the next request after `WIKI_RECHECK_MS` (default 1 s): the folder is
 fingerprinted by path, size and mtime, and a changed fingerprint rebuilds the snapshot. The server binds to
 `127.0.0.1` because nothing is access-controlled.
 
@@ -70,7 +81,7 @@ default is never shown. `tools/registry-add.sh ... brand` copies `public/esg-log
 
 | Path | What |
 |---|---|
-| `src/content/runtime/` | `config.ts` (parses `WIKI_DIRS`), `local-source.ts` (folder → files + fingerprint sha), `local-write.ts` (the only writer: saves one existing `.md` page, adds an image to `assets/`), `build.ts` (one parse → snapshot), `index.ts` (`getSnapshot`, `listWikis`, `findWiki`), `cache.ts`, `tree.ts` |
+| `src/content/runtime/` | `config.ts` (parses `WIKI_DIRS`, the id rule, `~`), `user-config.ts` (the config file: path, reader, atomic writer), `local-source.ts` (folder → files + fingerprint sha), `local-write.ts` (the only writer: saves one existing `.md` page, adds an image to `assets/`), `build.ts` (one parse → snapshot), `index.ts` (`getSnapshot`, `getWikiList`, `listWikis`, `findWiki`, `printFileTitle`), `cache.ts`, `tree.ts` |
 | `src/content/edit/` | `merge.ts`: the save's block-preserving merge (untouched blocks, lines and characters keep their original bytes; HTML comments kept; Obsidian syntax unescaped) |
 | `src/content/render/` | Markdown → React pipeline: wikilinks, embeds, callouts, Mermaid placeholders, Shiki, sanitiser, render cache |
 | `src/content/links/` | link map and resolution, asset URLs, path confinement |
@@ -102,6 +113,7 @@ default is never shown. `tools/registry-add.sh ... brand` copies `public/esg-log
 | `npm run lint` | ESLint 10 through `scripts/eslint-ts6.cjs` |
 | `npm test` | Vitest unit suite (`src/**/*.test.ts`) |
 | `npm run test:e2e` | Playwright: starts `next dev` on :3100 against `tests/fixtures/` |
+| `npm run test:e2e:config` | Config-file e2e (US-276): run `npm run build` first; uses `playwright.config-file.config.ts` |
 
 ## Toolchain and versions
 
