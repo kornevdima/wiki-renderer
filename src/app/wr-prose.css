@@ -653,7 +653,12 @@
    type; a Mermaid bump re-runs the TC-504 walk.
    Where Mermaid paints a pastel fill (actor boxes, gantt bars, pie slices) the fill is themed as well as the text, so the text
    keeps 4.5:1 on its own fill and every line or outline 3:1 against what it sits on (token pairs: wr-prose-diagram-contrast.test.ts).
-   The flowchart follows the reader mockup (page.css); the other types are readable and token-coloured, not branded. */
+   The flowchart follows the reader mockup (page.css); the other types are readable and token-coloured, not branded.
+   One exception (BUG-069): a class diagram note carries its colours as inline `fill/stroke ... !important` on its paths, and an inline
+   `!important` beats every rule in this file. Those two colours are the one thing the stylesheet does not theme: they are set at Mermaid's own input, as its
+   `themeVariables` `noteBkgColor` and `noteBorderColor` (mermaid-hydrate.ts, MERMAID_NOTE_THEME; the values are `var(--diagram-group)` / `var(--diagram-group-border)`, pinned as the only theme keys), so the note is a group-tone
+   box like the sequence and state ones and still follows a theme switch with no redraw. Sequence and state notes are the rules below
+   (`rect.note`, `.statediagram-note`). */
 .wr-prose [data-mermaid-id] svg:not(#_) {
     font-family: var(--font-sans) !important;
 }

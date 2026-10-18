@@ -3,6 +3,8 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import { MERMAID_NOTE_THEME } from "../components/reader/mermaid-hydrate";
+
 /**
  * US-192 (NFR-013, FR-027; TC-504, TC-487 diagram leg): the `--diagram-*` colour pairs, read out of `wr-prose.css` and resolved
  * against the token values in the installed `esg-theme.css` in both themes. The operator's bar ("Text and lines at 3:1"): text 4.5:1 against the
@@ -202,7 +204,47 @@ describe("the Mermaid override section (override strategy)", () => {
     }
   });
 
-  it("never sets Mermaid's own theme: the stylesheet is the only theming, so a theme switch redraws nothing", () => {
-    expect(proseRaw).not.toMatch(/themeVariables|mermaid\.initialize/);
+  it("CSS does the theming; the one exception is MERMAID_NOTE_THEME (the two note variables, as var() references), so a theme switch redraws nothing", () => {
+    // The stylesheet never configures Mermaid.
+    expect(proseRaw).not.toMatch(/mermaid\.initialize/);
+    // The only theme input is MERMAID_NOTE_THEME: exactly these two keys, each a var() of a --diagram-* alias.
+    expect(Object.keys(MERMAID_NOTE_THEME).sort()).toEqual(["noteBkgColor", "noteBorderColor"]);
+    for (const value of Object.values(MERMAID_NOTE_THEME)) expect(value).toMatch(/^var\(--diagram-[a-z0-9-]+\)$/);
+    // The hydrator hands Mermaid that object and sets no `theme` key and no other theme variables.
+    const hydrate = read("../components/reader/mermaid-hydrate.ts").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    expect(hydrate.match(/\bthemeVariables\b/g)?.length, "themeVariables is named in the config type and the initialize call only").toBe(2);
+    expect(hydrate).toMatch(/themeVariables:\s*MERMAID_NOTE_THEME/);
+    expect(hydrate).not.toMatch(/\btheme\s*:/);
   });
+});
+
+describe("BUG-069: every Mermaid note is a group-tone box with the diagram ink", () => {
+  const rulesFor = (property: string, value: string): string[] =>
+    [...prose.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+      .filter((m) => new RegExp(`${property}\\s*:\\s*${value.replace(/[()-]/g, "\\$&")}\\s*!important`).test(m[2]!))
+      .map((m) => m[1]!);
+
+  it("the sequence note and both state-note shapes are in the group fill and group border rules", () => {
+    const fills = rulesFor("fill", "var(--diagram-group)").join(",");
+    const strokes = rulesFor("stroke", "var(--diagram-group-border)").join(",");
+    for (const selector of ["rect.note", ".statediagram-note path", ".statediagram-note rect"]) {
+      expect(fills, `fill: ${selector}`).toContain(selector);
+      expect(strokes, `stroke: ${selector}`).toContain(selector);
+    }
+  });
+
+  it("the class note, whose colours are inline !important no rule here can beat, takes the group aliases at Mermaid's input", () => {
+    expect(MERMAID_NOTE_THEME).toEqual({ noteBkgColor: "var(--diagram-group)", noteBorderColor: "var(--diagram-group-border)" });
+    const defined = declarations(blockAfter(prose, ":root {"));
+    for (const value of Object.values(MERMAID_NOTE_THEME)) expect(defined.has(value.slice(4, -1)), value).toBe(true);
+  });
+
+  for (const [theme, tokens] of THEMES) {
+    it(`${theme}: a note's border is 3:1 on the page and its ink 4.5:1 on its fill`, () => {
+      const page = over(resolve(tokens, "background"), [255, 255, 255]);
+      const fill = colourOf(tokens, "diagram-group", page);
+      expect(ratio(over(resolve(tokens, "diagram-ink"), fill), fill)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(over(resolve(tokens, "diagram-group-border"), page), page)).toBeGreaterThanOrEqual(3);
+    });
+  }
 });

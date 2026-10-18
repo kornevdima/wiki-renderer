@@ -107,7 +107,12 @@ describe("hydrateMermaid", () => {
     const { m, initialize } = mermaidStub(async () => ({ svg: "<svg/>" }));
     await hydrateMermaid({ root: w.root, blocks: w.blocks, load: async () => m, errorText: "E" });
     expect(initialize).toHaveBeenCalledTimes(1);
-    expect(initialize.mock.calls[0]![0]).toEqual({ startOnLoad: false, securityLevel: "strict", suppressErrorRendering: true });
+    expect(initialize.mock.calls[0]![0]).toEqual({
+      startOnLoad: false,
+      securityLevel: "strict",
+      suppressErrorRendering: true,
+      themeVariables: { noteBkgColor: "var(--diagram-group)", noteBorderColor: "var(--diagram-group-border)" },
+    });
     expect(JSON.stringify(initialize.mock.calls[0])).not.toMatch(/loose|antiscript|sandbox|secure/);
   });
 

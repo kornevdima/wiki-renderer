@@ -7,6 +7,7 @@
  * - Strict security level, always. `initialize` is called with `securityLevel: "strict"` and `startOnLoad: false`
  *   and nothing else that could lower it; Mermaid's default `secure` list stays, so an `%%{init}%%` directive in a
  *   diagram cannot change `securityLevel`.
+ * - The only theme input is `MERMAID_NOTE_THEME` (BUG-069, see below); everything else is the stylesheet's.
  * - Each placeholder is drawn once per page view: a `data-mermaid-state` marker ("drawing", "drawn", "error") is set
  *   before the first `await` for that block, so a second pass (React strict-mode double effect, a re-run) skips it.
  * - Drawn: the SVG replaces the source `pre` and the server caption is removed; the placeholder keeps its attributes. The SVG is
@@ -18,8 +19,26 @@
  */
 import { nameDrawnDiagram, type SvgElementLike } from "./mermaid-accessible-name";
 
+/**
+ * BUG-069: the one place the stylesheet cannot reach. The class diagram writes each note's colours into the shapes as inline
+ * `style="fill:...!important;stroke:...!important"` (from these two theme variables), and an inline `!important` beats every
+ * stylesheet rule. So the two variables are CSS `var()` references to the group aliases: Mermaid copies the string, the browser
+ * resolves it, and a theme switch still redraws nothing. No other theme key is set and `theme` stays Mermaid's default.
+ */
+export const MERMAID_NOTE_THEME = {
+  noteBkgColor: "var(--diagram-group)",
+  noteBorderColor: "var(--diagram-group-border)",
+} as const;
+
+export interface MermaidInitConfig {
+  startOnLoad: false;
+  securityLevel: "strict";
+  suppressErrorRendering: true;
+  themeVariables: typeof MERMAID_NOTE_THEME;
+}
+
 export interface MermaidLike {
-  initialize(config: { startOnLoad: false; securityLevel: "strict"; suppressErrorRendering: true }): void;
+  initialize(config: MermaidInitConfig): void;
   render(id: string, source: string): Promise<{ svg: string }>;
 }
 
@@ -115,7 +134,7 @@ export async function hydrateMermaid(options: HydrateOptions): Promise<void> {
   let mermaid: MermaidLike;
   try {
     mermaid = await load();
-    mermaid.initialize({ startOnLoad: false, securityLevel: "strict", suppressErrorRendering: true });
+    mermaid.initialize({ startOnLoad: false, securityLevel: "strict", suppressErrorRendering: true, themeVariables: MERMAID_NOTE_THEME });
   } catch {
     for (const { el } of pending) el.setAttribute(MERMAID_STATE_ATTRIBUTE, "undrawn");
     return;
