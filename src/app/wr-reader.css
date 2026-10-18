@@ -418,7 +418,7 @@ tt,
 /*
  * The page width (US-280). The reading view's column takes the width that the root layout read from the `wr-page-width` cookie
  * (`html[data-page-width]`: `a4-portrait`, `a4-landscape`, `full` or `free`, with `--wr-page-px` for all but `full`) from 1200px, and
- * only on a rendered page (`.wr-column[data-width-scope]`): the source view, the editor and the landing keep the measure. Below
+ * only on a rendered page or the editor (`.wr-column[data-width-scope]`, US-291): the source view and the landing keep the measure. Below
  * 1200px, and with no attribute (Reading, the default), none of this applies and the column is as it always was. Screen only: print is
  * the rules above.
  *

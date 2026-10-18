@@ -185,6 +185,8 @@ export function PageWidthHandle({ copy }: { copy: PageWidthCopy }) {
       <span aria-hidden="true" className="wr-width-probe" data-width-probe />
       <span aria-hidden="true" className="wr-width-probe wr-width-probe--extra" data-width-extra-probe />
       <span aria-hidden="true" className="wr-width-room" ref={room} data-width-room />
+      {/* No text selection during a drag, also over the editor (US-291, BUG-065 in edit mode): the DS WidthHandle cancels `selectstart`
+          for the length of the drag, because WebKit selects inside a contenteditable under a user-select none body. */}
       <div className="wr-width-sticky">
         {metrics ? (
           <WidthHandle

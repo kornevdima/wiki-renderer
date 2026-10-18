@@ -206,7 +206,14 @@ function WidthHandle({
     const previous = { standard: style.userSelect, webkit: style.webkitUserSelect }
     style.userSelect = "none"
     style.webkitUserSelect = "none"
+    // WebKit still starts a selection inside an editable region (a contenteditable the pointer sweeps over) whatever the body's
+    // user-select says, so the selection start is cancelled too. Tied to `dragging`, which a non-primary press never sets, so the
+    // cancel is on only for the length of a drag and the same cleanup that restores the body takes it off (release, cancel, lost
+    // capture, unmount).
+    const refuse = (event: Event) => event.preventDefault()
+    document.addEventListener("selectstart", refuse, true)
     return () => {
+      document.removeEventListener("selectstart", refuse, true)
       style.userSelect = previous.standard
       style.webkitUserSelect = previous.webkit
     }

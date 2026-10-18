@@ -6,7 +6,10 @@ const HANDLE = '[role="separator"][aria-label="Page width"]';
 const PAGES = [
   { name: "short page", path: "/w/second/Readme.md" },
   { name: "long page", path: "/w/sample/guides/Long%20page.md" },
+  // US-291: the handle is in the editor too (wiki/contracts/US-291-edit-width-contract.md R4d).
+  { name: "edit mode", path: "/w/sample/guides/Long%20page.md?view=edit" },
 ];
+const EDIT_PATH = PAGES[2].path;
 
 test.use({ viewport: { width: 1600, height: 1000 } });
 
@@ -16,6 +19,7 @@ const focusVisible = (page: Page) => page.locator(HANDLE).evaluate((el) => el.ma
 async function open(page: Page, path: string): Promise<void> {
   await page.goto(path);
   await expect(page.locator(HANDLE)).toBeVisible();
+  if (path.includes("view=edit")) await expect(page.getByTestId("edit-save")).toBeEnabled({ timeout: 30_000 });
 }
 
 /** Presses the grip's centre, sweeps left across the article's text and back down, button held; returns the selection seen at each stop. */
@@ -70,6 +74,20 @@ test("R5 a normal mouse selection in the article works after a drag", async ({ p
   const para = page.locator('[data-testid="reader-content"] p').first();
   const b = await para.boundingBox();
   if (!b) throw new Error("PRECONDITION MISSING: no paragraph box");
+  await page.mouse.move(b.x + 2, b.y + b.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(b.x + Math.min(b.width - 2, 200), b.y + b.height / 2, { steps: 6 });
+  await page.mouse.up();
+  expect((await selected(page)).length).toBeGreaterThan(0);
+});
+
+test("US-291 R4d in edit mode a mouse drag leaves no focus ring on the grip, and a selection in the editor works after it", async ({ page }) => {
+  await open(page, EDIT_PATH);
+  await dragAcrossArticle(page);
+  expect(await focusVisible(page)).toBe(false);
+  const para = page.locator('[data-testid="reader-content"] [contenteditable="true"] p').first();
+  const b = await para.boundingBox();
+  if (!b) throw new Error("PRECONDITION MISSING: no paragraph box in the editor");
   await page.mouse.move(b.x + 2, b.y + b.height / 2);
   await page.mouse.down();
   await page.mouse.move(b.x + Math.min(b.width - 2, 200), b.y + b.height / 2, { steps: 6 });
