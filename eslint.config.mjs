@@ -285,6 +285,8 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "build-cli/**",
+    "release/**",
     "next-env.d.ts",
     "test-results/**",
     "playwright-report/**",

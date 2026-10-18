@@ -15,13 +15,16 @@
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
+    "build:cli": "vite build -c vite.cli.config.mts",
     "start": "next start --hostname 127.0.0.1",
     "lint": "node scripts/eslint-ts6.cjs",
     "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:e2e:config": "playwright test -c playwright.config-file.config.ts"
+    "test:e2e:config": "playwright test -c playwright.config-file.config.ts",
+    "package": "node scripts/package.mjs",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "@mdxeditor/editor": "4.3.3",

@@ -1,4 +1,4 @@
-// Unit suite: src/**/*.test.ts, no network. `server-only` is aliased to a no-op stub so server modules import in node.
+// Unit suite: src/**/*.test.ts and scripts/**/*.test.ts (the packaging scripts), no network. `server-only` is aliased to a no-op stub so server modules import in node.
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
@@ -13,7 +13,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
     exclude: ["node_modules", "tests/e2e/**"],
     environment: "node",
     reporters: ["default"],

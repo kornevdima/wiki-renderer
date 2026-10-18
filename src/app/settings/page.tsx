@@ -10,11 +10,13 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Topbar } from "@/components/layout/topbar";
 import { documentTitle } from "@/components/reader/document-title";
 import { PrintSetting } from "@/components/settings/print-setting";
+import { ServerSetting } from "@/components/settings/server-setting";
 import { SettingsWikis } from "@/components/settings/settings-wikis";
 import { Alert } from "@/components/ui/alert";
 import { getWikiList, printFileTitle } from "@/content/runtime";
 import { readUserConfig, type StoredWiki } from "@/content/runtime/user-config";
 import { env } from "@/lib/env";
+import { appVersion } from "@/lib/version";
 
 export const dynamic = "force-dynamic";
 
@@ -35,12 +37,13 @@ export default async function SettingsPage() {
 
   let wikis: readonly StoredWiki[] = list.wikis;
   let fileError: string | undefined;
-  if (!list.managedByEnv) {
-    try {
-      wikis = (await readUserConfig(list.configPath)).wikis;
-    } catch (error) {
-      fileError = error instanceof Error ? error.message : String(error);
-    }
+  let port: number | null = null;
+  try {
+    const config = await readUserConfig(list.configPath);
+    port = config.port ?? null;
+    if (!list.managedByEnv) wikis = config.wikis;
+  } catch (error) {
+    if (!list.managedByEnv) fileError = error instanceof Error ? error.message : String(error);
   }
   const readOnly = list.managedByEnv || fileError !== undefined;
 
@@ -66,6 +69,10 @@ export default async function SettingsPage() {
           checked={printFileTitle()}
           envManaged={env.WIKI_PRINT_FILE_TITLE !== undefined}
         />
+        <ServerSetting port={port} />
+        <footer className="text-caption text-ink-muted" data-testid="settings-version">
+          {t("version", { version: appVersion() })}
+        </footer>
       </main>
     </div>
   );

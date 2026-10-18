@@ -1,0 +1,3 @@
+*.sh text eol=lf
+scripts/launcher/wiki-renderer text eol=lf
+scripts/launcher/wiki-renderer.cmd text eol=crlf

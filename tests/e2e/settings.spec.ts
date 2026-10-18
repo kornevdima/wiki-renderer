@@ -37,6 +37,7 @@ interface Wiki {
 interface Cfg {
   wikis: Wiki[];
   printFileTitle?: boolean;
+  port?: number;
 }
 
 /** Three wikis, the first two read-only fixtures, the third a temp folder the remove test can prove is left alone. */
@@ -741,6 +742,104 @@ test.describe("US-277 Settings page", () => {
     const withError = await fit();
     expect(withError.scroll).toBeLessThanOrEqual(withError.client);
   });
+
+  // US-278 R13: the Server section's Port field writes `port` to the config file (the launcher reads it at the next start).
+  test("R13: a port typed in Settings is saved to the file with the Saved status; an emptied field removes it; the other keys stay", async ({ page }) => {
+    await open(page, FILE_URL);
+    const input = page.getByTestId("settings-port");
+    await expect(input).toHaveValue("");
+    await input.fill("4711");
+    await page.getByTestId("settings-port-save").click();
+    await expect(page.getByTestId("settings-port-status")).toHaveText(messages.settings.server.saved);
+    await expect.poll(() => readCfg(FILE_CONFIG).port).toBe(4711);
+    expect(ids(FILE_CONFIG)).toEqual(["esg-project", "second-notes", "third-wiki"]);
+    await page.reload();
+    await expect(page.getByTestId("settings-port")).toHaveValue("4711"); // the saved value is what the page loads with
+
+    await page.getByTestId("settings-port").fill("");
+    await page.getByTestId("settings-port-save").click();
+    await expect(page.getByTestId("settings-port-status")).toHaveText(messages.settings.server.saved);
+    await expect.poll(() => "port" in readCfg(FILE_CONFIG)).toBe(false);
+    expect(ids(FILE_CONFIG)).toEqual(["esg-project", "second-notes", "third-wiki"]);
+  });
+
+  test("R13: 80, 70000 and abc show the port error and leave the file byte for byte unchanged", async ({ page }) => {
+    writeConfig(FILE_CONFIG, { wikis: threeWikis(), port: 4720 });
+    const before = bytes(FILE_CONFIG);
+    await open(page, FILE_URL);
+    await expect(page.getByTestId("settings-port")).toHaveValue("4720");
+    for (const value of ["80", "70000", "abc", "1023", "4700.5"]) {
+      await page.getByTestId("settings-port").fill(value);
+      await page.getByTestId("settings-port-save").click();
+      await expect(page.getByTestId("settings-port-error"), value).toBeVisible();
+      await expect(page.getByTestId("settings-port-status"), value).toHaveText("");
+      expect(bytes(FILE_CONFIG), value).toBe(before);
+    }
+    await page.getByTestId("settings-port").fill("4721"); // typing again clears the error; a valid value then saves
+    await expect(page.getByTestId("settings-port-error")).toHaveCount(0);
+    await page.getByTestId("settings-port-save").click();
+    await expect.poll(() => readCfg(FILE_CONFIG).port).toBe(4721);
+  });
+
+  test("R13: with WIKI_DIRS managing the list the Port field is still editable and saves to the config file", async ({ page }) => {
+    await open(page, ENV_URL);
+    await expect(page.getByTestId("settings-add-input")).toHaveCount(0); // control: the wiki list is read-only here
+    const input = page.getByTestId("settings-port");
+    await expect(input).toBeEnabled();
+    await expect(page.getByTestId("settings-port-save")).toBeEnabled();
+    await input.fill("4733");
+    await page.getByTestId("settings-port-save").click();
+    await expect(page.getByTestId("settings-port-status")).toHaveText(messages.settings.server.saved);
+    await expect.poll(() => (existsSync(ENV_CONFIG) ? readCfg(ENV_CONFIG).port : undefined)).toBe(4733);
+    await page.reload();
+    await expect(page.getByTestId("settings-port")).toHaveValue("4733");
+  });
+
+  test("R13: a port change called with a forged Host is refused and writes nothing; the same call with the real Host works", async ({ page }) => {
+    await open(page, FILE_URL);
+    const actionId = await captureActionId(page);
+    const before = bytes(FILE_CONFIG);
+    for (const host of ["evil.example:3300", "127.0.0.1:9999", "localhost:9999", "127.0.0.1.evil.example:3300"]) {
+      const res = await postAction(3300, actionId, host, [{ kind: "port", value: 4799 }]);
+      expect(res.body, host).toContain('"reason":"forbidden_host"');
+      expect(bytes(FILE_CONFIG), host).toBe(before);
+    }
+    const none = await postAction(3300, actionId, null, [{ kind: "port", value: 4799 }]).catch(() => ({ status: 0, body: "" })); // the server may drop a request with no Host
+    expect(none.body).not.toContain('"ok":true');
+    if (none.status === 200) expect(none.body).toContain('"reason":"forbidden_host"');
+    expect(bytes(FILE_CONFIG)).toBe(before);
+    const ok = await postAction(3300, actionId, "127.0.0.1:3300", [{ kind: "port", value: 4799 }]);
+    expect(ok.body).toContain('"ok":true'); // control: the method works
+    await expect.poll(() => readCfg(FILE_CONFIG).port).toBe(4799);
+    // The server-side range check holds without the form: 80 is refused even with the real Host.
+    const low = await postAction(3300, actionId, "127.0.0.1:3300", [{ kind: "port", value: 80 }]);
+    expect(low.body).not.toContain('"ok":true');
+    expect(readCfg(FILE_CONFIG).port).toBe(4799);
+  });
+
+  // US-278 R6 / R12: the Settings footer shows "Wiki Renderer {version}" and the version is the one in package.json (what `wiki-renderer --version` prints).
+  for (const size of [
+    { name: "1440", width: 1440, height: 900 },
+    { name: "375", width: 375, height: 667 },
+  ]) {
+    test(`US-278 R6: at ${size.name} px /settings ends with the version footer from package.json and does not scroll sideways, file-source and env-managed`, async ({ page }) => {
+      const { version } = JSON.parse(readFileSync(path.resolve("package.json"), "utf8")) as { version?: string };
+      if (!version) throw new Error("PRECONDITION MISSING: a version in package.json");
+      await page.setViewportSize({ width: size.width, height: size.height });
+      for (const base of [FILE_URL, ENV_URL]) {
+        await open(page, base);
+        const footer = page.getByTestId("settings-version");
+        await expect(footer).toHaveCount(1);
+        await expect(footer).toHaveText(messages.settings.version.replace("{version}", version));
+        await footer.scrollIntoViewIfNeeded();
+        await expect(footer).toBeInViewport();
+        const box = await footer.boundingBox();
+        expect(box && box.x >= 0 && box.x + box.width <= size.width, base).toBe(true);
+        const fits = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+        expect(fits.scroll, base).toBeLessThanOrEqual(fits.client);
+      }
+    });
+  }
 
   test("R11: at 375 x 667 the row menu is in the viewport, Move up and down live in it, and name and folder show without a table scroll", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });

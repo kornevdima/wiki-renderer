@@ -7,7 +7,7 @@ import { z } from "zod";
 import { checkWikiId, displayName, idFromFolder, resolveFolder } from "./config";
 import { measureFolder } from "./local-source";
 import { isLocalHost } from "@/lib/host-check";
-import { MAX_FOLDER_LENGTH, MAX_NAME_LENGTH } from "@/lib/settings-limits";
+import { MAX_APP_PORT, MAX_FOLDER_LENGTH, MAX_NAME_LENGTH, MIN_APP_PORT } from "@/lib/settings-limits";
 import { readUserConfig, writeUserConfig, type StoredWiki, type UserConfig } from "./user-config";
 
 /**
@@ -24,11 +24,13 @@ export const changeSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("move"), id: idField, direction: z.enum(["up", "down"]) }),
   z.object({ kind: z.literal("remove"), id: idField }),
   z.object({ kind: z.literal("printFileTitle"), value: z.boolean() }),
+  // The launcher's port (US-278); null clears it (the default with a next-free fallback).
+  z.object({ kind: z.literal("port"), value: z.number().int().min(MIN_APP_PORT).max(MAX_APP_PORT).nullable() }),
 ]);
 export type Change = z.infer<typeof changeSchema>;
 
 export type AddFailure = "empty" | "not_absolute" | "not_found" | "not_a_folder" | "unreadable" | "already_listed" | "too_large";
-export type ChangeFailure = AddFailure | "forbidden_host" | "managed_by_env" | "config_error" | "invalid" | "not_listed" | "name_empty" | "name_too_long";
+export type ChangeFailure = AddFailure | "forbidden_host" | "managed_by_env" | "config_error" | "invalid" | "port_invalid" | "not_listed" | "name_empty" | "name_too_long";
 
 export type ChangeOutcome =
   | { ok: true; wiki?: StoredWiki }
@@ -134,9 +136,11 @@ export function removed(config: UserConfig, id: string): UserConfig {
 
 export async function applyChange(input: unknown, ctx: ChangeContext): Promise<ChangeOutcome> {
   if (!isLocalHost(ctx.host, ctx.port)) return { ok: false, reason: "forbidden_host" };
-  if (ctx.managedByEnv) return { ok: false, reason: "managed_by_env" };
+  // `WIKI_DIRS` manages the wiki list, not the port: the port is the one change that stays open then.
+  const isPort = typeof input === "object" && input !== null && (input as { kind?: unknown }).kind === "port";
+  if (ctx.managedByEnv && !isPort) return { ok: false, reason: "managed_by_env" };
   const parsed = changeSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, reason: "invalid" };
+  if (!parsed.success) return { ok: false, reason: isPort ? "port_invalid" : "invalid" };
   const change = parsed.data;
 
   let name = "";
@@ -197,6 +201,13 @@ export async function applyChange(input: unknown, ctx: ChangeContext): Promise<C
       if (!config.wikis.some((w) => w.id === change.id)) return { ok: false, reason: "not_listed" };
       next = removed(config, change.id);
       break;
+    case "port": {
+      const { port: _old, ...rest } = config;
+      void _old;
+      const updated: UserConfig = change.value === null ? rest : { ...rest, port: change.value };
+      next = config.port === (change.value ?? undefined) ? null : updated;
+      break;
+    }
     case "printFileTitle":
       next = config.printFileTitle === change.value ? null : { ...config, printFileTitle: change.value };
       break;

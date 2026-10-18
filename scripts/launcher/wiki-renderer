@@ -1,0 +1,14 @@
+#!/bin/sh
+# Starts Wiki Renderer from its install folder with the Node runtime that ships beside it (US-278).
+# Follows symlinks, so a link on the PATH to this file still finds bin/node and cli.mjs.
+self="$0"
+while [ -L "$self" ]; do
+  dir=$(cd "$(dirname "$self")" && pwd)
+  self=$(readlink "$self")
+  case "$self" in
+    /*) ;;
+    *) self="$dir/$self" ;;
+  esac
+done
+here=$(cd "$(dirname "$self")" && pwd)
+exec "$here/bin/node" "$here/cli.mjs" "$@"

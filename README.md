@@ -34,6 +34,46 @@ there is no sign-in, and anyone who can reach the port can read every configured
 Changes you make to the files in another editor show on the next request, after `WIKI_RECHECK_MS` (1 second by
 default). Changes to `.env.local` need a restart of `npm run dev`.
 
+## Install from a release
+
+You do not need Node, git or `npm install` for this. Each release on GitHub (https://github.com/kornevdima/wiki-renderer/releases)
+carries one archive per system, with its own copy of Node 24 inside:
+
+| System | Archive |
+|---|---|
+| macOS, Apple silicon | `wiki-renderer-<version>-darwin-arm64.tar.gz` |
+| macOS, Intel | `wiki-renderer-<version>-darwin-x64.tar.gz` |
+| Linux, x64 | `wiki-renderer-<version>-linux-x64.tar.gz` |
+| Linux, arm64 | `wiki-renderer-<version>-linux-arm64.tar.gz` |
+| Windows, x64 | `wiki-renderer-<version>-win-x64.zip` |
+
+1. Download the archive for your system, and `SHA256SUMS` if you want to check it (`shasum -a 256 -c SHA256SUMS --ignore-missing` on macOS, `sha256sum --ignore-missing -c SHA256SUMS` on Linux).
+2. Unpack it anywhere you can write to. It makes one folder, `wiki-renderer-<version>-<system>`.
+3. Run the launcher in that folder: `./wiki-renderer` on macOS and Linux, `wiki-renderer.cmd` on Windows.
+
+The app starts on http://127.0.0.1:4700 and opens your browser. It listens on `127.0.0.1` only and works without a network connection.
+
+```bash
+./wiki-renderer                       # start on port 4700 (or the next free one) and open the browser
+./wiki-renderer --port 4800 --no-open # a port of your own, no browser
+./wiki-renderer --verbose             # also show the server's own output
+./wiki-renderer add ~/notes/wiki      # add a wiki (a relative folder starts from where you typed this)
+./wiki-renderer add . --id notes      # the same, naming it
+./wiki-renderer list                  # id, name and folder of each wiki
+./wiki-renderer remove notes          # take it off the list; the folder is not touched
+./wiki-renderer --version
+./wiki-renderer --help
+```
+
+- **Wikis:** `add` and `remove` change the same config file as the app's Settings page and refuse for the same reasons. Settings (the settings menu, then Settings) shows the version at the bottom.
+- **Output:** `start` prints only its own lines (the port notice, then "is running at") and any warning or error. `--verbose` shows the server's own banner and log as well.
+- **The port:** 4700 by default, so it stays clear of the 3000 other local dev servers use. If 4700 is taken the app uses the next free port up to 4709 and says so (`Port 4700 is in use, using 4701.`); if all ten are taken it says so and exits with status 1. A port you choose is never moved. In order: `--port`, then the `WIKI_RENDERER_PORT` environment variable, then `port` in the config file (also the Port field under Server on the Settings page, which applies the next time the app starts), then the default. If a port you chose is busy it prints `Port <n> is in use. Try --port <other>.` and exits with status 1.
+- **`WIKI_DIRS`:** when it is set it decides the list, and `add` and `remove` refuse. `list` shows that list.
+- **The archives are not signed.** A browser download carries a flag that makes the system ask once. Clear it for the unpacked folder:
+  - macOS: `xattr -dr com.apple.quarantine wiki-renderer-<version>-darwin-arm64`
+  - Windows: `Get-ChildItem -Recurse wiki-renderer-<version>-win-x64 | Unblock-File` (or, before unzipping, right-click the zip, Properties, Unblock).
+  - A download with `curl` does not carry the flag, so the one-line install scripts (a later release) never ask.
+
 ## Several wikis
 
 `WIKI_DIRS` takes a comma-separated list. Each entry is either `id=folder` or a bare folder:

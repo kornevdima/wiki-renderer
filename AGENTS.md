@@ -26,7 +26,7 @@ WIKI_DIRS="notes=~/notes/wiki" npm run dev   # or inline
 
 The wiki list lives in `config.json` in the user's config folder (macOS `~/Library/Application Support/wiki-renderer`,
 Linux `$XDG_CONFIG_HOME/wiki-renderer` else `~/.config/wiki-renderer`, Windows `%APPDATA%\wiki-renderer`);
-`WIKI_RENDERER_CONFIG` names another file. Shape: `{"wikis": [{"id", "name", "root"}], "printFileTitle": false}`, nothing
+`WIKI_RENDERER_CONFIG` names another file. Shape: `{"wikis": [{"id", "name", "root"}], "printFileTitle": false, "port": 4700}` (`port` optional), nothing
 else (branding stays build-time env). The file is re-read when its mtime changes (checked at most once per
 `WIKI_RECHECK_MS`), so a change shows without a restart; a removed wiki's caches are dropped. A relative `root` in the file resolves against the config file's folder (`WIKI_DIRS` entries resolve against the repo's working directory). Deleting the file empties the list. A missing file starts the
 server with an empty home page naming the path; a bad file keeps the last good list and the home page names the problem.
@@ -94,6 +94,8 @@ default is never shown. `tools/registry-add.sh ... brand` copies `public/esg-log
 | `src/app/page.tsx` | the wiki list, or a redirect when only one wiki is configured |
 | `src/components/reader/` | reader UI (shell, sidebar, nav tree, outline, search dialog, PDF, source view, editor: `edit-view.tsx`, `edit-editor.tsx`) |
 | `src/components/ui/`, `src/components/layout/`, `src/app/esg-theme.css`, `src/fonts/` | **installed** from the ESG design-system registry; don't hand-edit. Installed at design system **v57** (`esg-design-system` `703970a`, published 2026-10-17 as artifact version 125, pulled from the local registry 2026-10-17: every item re-pulled with `--overwrite` at v56 (US-288), then `width-handle` and `theme` at v57 (US-281), no forks of design components, operator ruling 2026-10-17). Restore `package.json` and `package-lock.json` after `registry-add.sh` (the CLI loosens exact pins) |
+| `src/cli/` | the `wiki-renderer` command (US-278): `args.ts` (parser), `commands.ts` (`add` / `remove` / `list` through `checkNewFolder` + `writeUserConfig`), `start.ts` (port probe, spawns `server.js` with `HOSTNAME=127.0.0.1`, opens the browser), `open-browser.ts`, `port.ts`, `help.ts`, `copy.ts`, `main.ts`. `vite.cli.config.mts` bundles it to `build-cli/cli.mjs`. `src/lib/version.ts` reads `package.json`'s version for `--version` and the Settings footer |
+| `scripts/` | the packaging (US-278): `package.mjs` (stage + pack one archive), `lib/archive.mjs` (tar.gz and zip writers), `lib/node-dist.mjs` + `ci-tools.mjs` (fetch and verify Node, unpack), `smoke.mjs` (runs an unpacked archive), `launcher/` (`wiki-renderer`, `wiki-renderer.cmd`). `.github/workflows/release.yml` runs them on a `v*.*.*` tag |
 | `tests/e2e/`, `tests/fixtures/` | Playwright smoke suite and its two sample wikis |
 
 ## Conventions
@@ -114,9 +116,26 @@ default is never shown. `tools/registry-add.sh ... brand` copies `public/esg-log
 | `npm run dev` / `npm run build` / `npm start` | Next on 127.0.0.1 |
 | `npm run typecheck` | TypeScript 7 (`tsc --noEmit` via `node_modules/typescript/bin/tsc`) |
 | `npm run lint` | ESLint 10 through `scripts/eslint-ts6.cjs` |
-| `npm test` | Vitest unit suite (`src/**/*.test.ts`) |
+| `npm test` | Vitest unit suite (`src/**/*.test.ts`, `scripts/**/*.test.ts`) |
 | `npm run test:e2e` | Playwright: starts `next dev` on :3100 against `tests/fixtures/` |
+| `npm run build:cli` | Vite SSR bundle of `src/cli/` into `build-cli/cli.mjs` (needs no Next build) |
+| `npm run package -- <darwin\|linux\|win> <arm64\|x64> <nodeDir>` | after `npm run build` and `build:cli`: `release/wiki-renderer-<v>-<platform>-<arch>.{tar.gz,zip}` (see Portable build) |
+| `npm run smoke -- <unpackedDir> --port 3310` | smoke an unpacked archive (needs `npx playwright install chromium`) |
 | `npm run test:e2e:config` | Config-file e2e (US-276): run `npm run build` first; uses `playwright.config-file.config.ts` |
+
+## Portable build and releases (US-278)
+
+`next.config.ts` sets `output: "standalone"` and traces out `sharp` and `@img` (`outputFileTracingExcludes`; `images.unoptimized`
+alone does not drop them), so the server has no native module. `npm start` still works but Next warns that `next start`
+does not work with standalone; the archive runs `node server.js`. `scripts/package.mjs` copies `.next/standalone`, adds
+`.next/static`, `public/`, `cli.mjs`, the launchers and the Node binary (`bin/node`, `bin/node.exe` on Windows), deletes `.env*`, `src/` and `tests/`
+(tracing copies them in), turns the symlinks in `.next/node_modules` into folders and fails on any `.node`, `.dll`, `.so`
+or `.dylib` file. Shiki's WASM is inlined in JS and is fine.
+
+- **Release:** push a tag `v<x.y.z>`. The workflow sets `package.json`'s version from the tag, builds once on Linux, then packages and smoke-tests (`scripts/smoke.mjs`: version, add/list/remove, busy port, loopback-only listener, `/`, a page, search, Settings footer, a real page save through the editor, zero non-127.0.0.1 requests, a clean stop) on the five native runners, and publishes with `SHA256SUMS` only if all five pass. The Node version is `NODE_VERSION` in the workflow, verified against nodejs.org's `SHASUMS256.txt`.
+- **Port:** default 4700 with the next free one up to 4709 (`src/cli/port-plan.ts`); `--port` > `WIKI_RENDERER_PORT` > config `port` (1024-65535, `user-config.ts`, set on Settings > Server through `changeSettingsAction`'s `port` change, open even when `WIKI_DIRS` manages the list) are fixed and never move. The probe (`port.ts`) binds 127.0.0.1 and connects to 127.0.0.1 and ::1; it never binds a wildcard (firewall prompts). `scripts/node-sha256.json` holds the expected Node hashes; bump it with `NODE_VERSION`.
+- **Launcher:** `wiki-renderer` / `wiki-renderer.cmd` run `bin/node cli.mjs`. `start` sets `HOSTNAME=127.0.0.1` and `PORT` for the server (Next defaults to 0.0.0.0; Settings' Host check reads `PORT`). `server.js` changes into the install folder, so a relative `WIKI_DIRS` entry resolves there.
+- **Local run:** see the scripts' headers. Build in a copy of the repo if a `next dev` is running (it holds the `.next` lock).
 
 ## Toolchain and versions
 
@@ -141,8 +160,9 @@ comes back through the registry. `src/app/colour-guard.test.ts` fails on any han
 - Don't build a server-side PDF path. Save as PDF is the browser's print.
 - Don't bind to `0.0.0.0` or add a public deploy without first adding access control. There is none.
 - Don't write to a wiki folder anywhere but `local-write.ts`, reached only through `savePageAction`. It saves an existing `.md` page inside the wiki's real root, never creates or deletes files, refuses when the file changed since it was opened, and is off when `WIKI_READ_ONLY=true`. Committing and pushing stay the person's own git steps.
-- Don't write the config file except through `writeUserConfig`, reached from `changeSettingsAction` after the Host check (`isLocalHost`: only `127.0.0.1:<port>` or `localhost:<port>`). A new Settings change goes through `applyChange`, which re-reads the file before it writes.
+- Don't write the config file except through `writeUserConfig`, reached from `changeSettingsAction` after the Host check (`isLocalHost`: only `127.0.0.1:<port>` or `localhost:<port>`), or from the `wiki-renderer add` / `remove` CLI commands (a local process: no Host check, the same `checkNewFolder`). A new Settings change goes through `applyChange`, which re-reads the file before it writes.
 - Don't save the editor's Markdown as is: always go through `mergeEdit`, which keeps what the person didn't touch byte-identical.
+- Don't ship `.env*`, `src/` or `tests/` in an archive, and don't bind the packaged server to anything but `127.0.0.1`: `scripts/package.mjs` deletes them and the launcher sets `HOSTNAME`; keep both when you change either.
 - Don't add brand colours, radii, shadows or fonts by hand.
 
 ## Delivery records

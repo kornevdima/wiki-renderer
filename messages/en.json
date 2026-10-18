@@ -255,6 +255,7 @@
   "settings": {
     "title": "Settings",
     "tagline": "Which wikis this app reads, and how they print.",
+    "version": "Wiki Renderer {version}",
     "wikis": {
       "heading": "Wikis",
       "addLabel": "Add a wiki",
@@ -301,7 +302,17 @@
       "envNote": "WIKI_PRINT_FILE_TITLE is set, so the environment decides this.",
       "saveError": "Could not save this setting. Try again."
     },
+    "server": {
+      "heading": "Server",
+      "portLabel": "Port",
+      "portHint": "Applies the next time the app starts.",
+      "portPlaceholder": "4700",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved."
+    },
     "errors": {
+      "port_invalid": "Use a whole number from 1024 to 65535, or leave it empty.",
       "empty": "Enter a folder path.",
       "not_absolute": "Use the full path of the folder, or start with ~.",
       "not_found": "No folder exists at that path.",

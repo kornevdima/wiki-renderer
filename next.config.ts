@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
+  // US-278: `.next/standalone` is the server the portable archive ships (`scripts/package.mjs`). `sharp` is Next's optional
+  // image optimiser and the only native module the trace pulls in, even with `images.unoptimized` (census 2026-10-18);
+  // `next/image` is not used, so the trace excludes drop it and the archive carries no `.node` / `.dylib` file.
+  output: "standalone",
+  outputFileTracingExcludes: { "*": ["node_modules/sharp/**", "node_modules/@img/**"] },
+  images: { unoptimized: true },
   // A page save sends the editor's Markdown twice (before any edit and now, up to 5 MB each) and an image upload up to
   // 10 MB; the default 1 MB would refuse both. Actions stay same-origin only.
   experimental: {

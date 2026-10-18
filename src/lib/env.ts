@@ -2,6 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
+import { DEFAULT_MAX_BYTES } from "@/lib/settings-limits";
+
 /** An optional var where an empty or whitespace-only value means "not configured". */
 const blankAsUnset = z.preprocess(
   (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
@@ -21,7 +23,7 @@ const schema = z.object({
   // How often a request re-fingerprints a wiki folder; within the window the cached snapshot is served as is.
   WIKI_RECHECK_MS: z.coerce.number().int().nonnegative().default(1000),
   // Total bytes one wiki may load into memory.
-  WIKI_MAX_BYTES: z.coerce.number().int().positive().default(52428800), // 50 MiB, as the hosted renderer; README "The size cap"
+  WIKI_MAX_BYTES: z.coerce.number().int().positive().default(DEFAULT_MAX_BYTES), // 50 MiB, as the hosted renderer; README "The size cap"
   // How long a folder must have been unreadable before the reader shows the staleness notice.
   WIKI_SNAPSHOT_STALE_NOTICE_MS: z.coerce.number().int().nonnegative().default(0),
   // "true" hides Edit and refuses saves: the reader never writes to a wiki folder.

@@ -5,13 +5,14 @@ import os from "node:os";
 import path from "node:path";
 
 import { checkWikiId, WikiConfigError } from "./config";
+import { MAX_APP_PORT, MIN_APP_PORT } from "@/lib/settings-limits";
 
 /**
  * The user's config file (US-276): `config.json` in the platform's config folder, holding the wiki list and
  * `printFileTitle` only. This module is the one reader and the one writer of that file; the Settings page (US-277) and
  * the CLI (US-278) write through `writeUserConfig`. Branding and tuning stay environment variables.
  *
- * Shape: `{ "wikis": [{ "id", "name", "root" }], "printFileTitle": false }`. Unknown keys are ignored on read and
+ * Shape: `{ "wikis": [{ "id", "name", "root" }], "printFileTitle": false, "port": 4700 }` (`port` optional). Unknown keys are ignored on read and
  * dropped on write. `root` is kept as written (`~/notes` stays `~/notes`) so the file moves between machines.
  */
 export interface StoredWiki {
@@ -23,6 +24,8 @@ export interface StoredWiki {
 export interface UserConfig {
   wikis: StoredWiki[];
   printFileTitle: boolean;
+  /** The port the launcher uses (US-278), 1024 to 65535; absent means the default with a next-free fallback. Read by the launcher at start. */
+  port?: number;
 }
 
 export interface PathContext {
@@ -67,7 +70,14 @@ export function parseUserConfig(value: unknown, file: string): UserConfig {
     wikis.push({ id, name: typeof name === "string" ? name.trim() : displayNameOf(id), root: root.trim() });
   });
   if (doc.printFileTitle !== undefined && typeof doc.printFileTitle !== "boolean") fail(file, '"printFileTitle" must be true or false');
-  return { wikis, printFileTitle: doc.printFileTitle === true };
+  const config: UserConfig = { wikis, printFileTitle: doc.printFileTitle === true };
+  if (doc.port !== undefined && doc.port !== null) {
+    if (typeof doc.port !== "number" || !Number.isInteger(doc.port) || doc.port < MIN_APP_PORT || doc.port > MAX_APP_PORT) {
+      fail(file, `"port" must be a whole number from ${MIN_APP_PORT} to ${MAX_APP_PORT}`);
+    }
+    config.port = doc.port;
+  }
+  return config;
 }
 
 function displayNameOf(id: string): string {
@@ -107,7 +117,7 @@ export async function readUserConfig(file: string): Promise<UserConfig> {
  * nothing) and creates the config folder when it is missing.
  */
 export async function writeUserConfig(file: string, config: UserConfig): Promise<void> {
-  const clean = parseUserConfig({ wikis: config.wikis, printFileTitle: config.printFileTitle }, file);
+  const clean = parseUserConfig({ wikis: config.wikis, printFileTitle: config.printFileTitle, port: config.port }, file);
   const text = `${JSON.stringify(clean, null, 2)}\n`;
   const dir = path.dirname(file);
   await mkdir(dir, { recursive: true });
