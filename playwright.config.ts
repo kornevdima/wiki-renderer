@@ -1,6 +1,6 @@
 // E2E: one `next dev` against the sample wiki in `tests/fixtures/sample-wiki`, on its own port so a running dev server
 // on :3000 is left alone.
-import { defineConfig } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 3100;
 const BASE_URL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${PORT}`;
@@ -13,6 +13,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: [["list"]],
+  // BUG-065: Playwright WebKit (the nearest instrument to Safari) runs the page-width handle's selection spec only.
+  projects: [
+    { name: "chromium" },
+    { name: "webkit", use: { ...devices["Desktop Safari"] }, testMatch: "**/width-handle-selection.spec.ts" },
+  ],
   use: { baseURL: BASE_URL, trace: "retain-on-failure" },
   webServer: process.env.E2E_BASE_URL
     ? undefined

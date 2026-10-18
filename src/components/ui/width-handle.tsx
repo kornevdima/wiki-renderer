@@ -198,13 +198,17 @@ function WidthHandle({
   const placed: Record<string, { left: number; row: number }> = {}
   for (const p of centred ? placeTopLabels(widths, 8, available) : placeGripLabels(widths, current, 8, available)) placed[p.id] = p
 
-  // No text selection while dragging; the pointer capture keeps the events on the handle.
+  // No text selection while dragging; the pointer capture keeps the events on the handle. Both properties: WebKit (Safari) only
+  // honours `-webkit-user-select` here, so the unprefixed one alone leaves the article text selectable (BUG-065).
   React.useEffect(() => {
     if (!dragging) return
-    const previous = document.body.style.userSelect
-    document.body.style.userSelect = "none"
+    const { style } = document.body
+    const previous = { standard: style.userSelect, webkit: style.webkitUserSelect }
+    style.userSelect = "none"
+    style.webkitUserSelect = "none"
     return () => {
-      document.body.style.userSelect = previous
+      style.userSelect = previous.standard
+      style.webkitUserSelect = previous.webkit
     }
   }, [dragging])
 
