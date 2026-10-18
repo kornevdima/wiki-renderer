@@ -2,7 +2,7 @@ import localFont from "next/font/local";
 
 /**
  * The ESG brand fonts (US-171, ADR-019, tokens v9 `type.fonts`), self-hosted: the files are the design system's own
- * (`~/esg/esg-design-system/project/fonts/`), copied here with the Lilex licence next to them. `next/font/local` emits
+ * (the ESG Design System repository's `project/fonts/`), copied here with the Lilex licence next to them. `next/font/local` emits
  * them under `/_next/static/media` on the app's own origin, so the CSP's `font-src 'self'` already covers them (SR-015).
  * `font-display: swap` is stated (not left to the default). Figtree keeps `adjustFontFallback` on (Next's default), so its
  * generated fallback face is size-adjusted and the swap shifts nothing. Lilex turns it off (dispatcher ruling 2026-10-03):

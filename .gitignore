@@ -52,3 +52,12 @@ next-env.d.ts
 .idea/
 /build-cli
 /release
+
+# ADLC working records (contracts, reviews, verification, census, measurements, screenshots) stay on this
+# machine: they carry local paths and machine details, and this repository is public (operator 2026-10-18).
+/wiki/census/*
+/wiki/contracts/*
+/wiki/reviews/*
+/wiki/verification/*
+/wiki/measurements/*
+!/wiki/*/.gitkeep
