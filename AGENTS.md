@@ -62,9 +62,15 @@ page's Markdown, with a Rich text / Source / Changes switch. **Save** (or ⌘S /
 
 ## Branding
 
-The default brand is neutral: **Wiki Renderer** / **Wikis**, a **WR** TenantLogo (design system v31: the ESG mark's
-rounded square, initials on the `indigo` ground, never the brand gradient), and tab titles ending "· Wiki Renderer".
-There is no ESG logo in the repo. A deployment brands itself with `BRAND_NAME`, `BRAND_PRODUCT`, `BRAND_INITIALS` (one or
+The default brand is **Wiki Renderer** / **Wikis**, a TenantLogo showing the **WR** mark (US-289, operator variant C: white Figtree 800 on the
+ESG background, radius 12), and tab titles ending "· Wiki Renderer". The mark is `public/wr-mark.svg`, passed as the TenantLogo's `src`
+by `branding().logo` only while nothing is branded (no `BRAND_LOGO`, no `BRAND_INITIALS`, the default `BRAND_NAME`); `BRAND_INITIALS` gives the
+initials on the `BRAND_TONE` ground (design system v31, never the brand gradient) and `BRAND_LOGO` its image, as before. The same mark is the tab icon through
+Next's file conventions (`src/app/icon.svg`, `icon.png` 32 px, `apple-icon.png` 180 px, `favicon.ico` 16 and 32 px) and is not changed by `BRAND_*`.
+All five are generated and committed by `scripts/make-mark.mjs` (the ESG ground from the design system's `esg-background.svg`, outlines by
+`fontkit` + `wawoff2`, rasters by Playwright's Chromium; dev-only, never run at build, so no native module reaches the archive); don't edit them by hand.
+`src/app/icon.svg` carries the ground's colours, so the colour guard skips that one file; `scripts/make-mark.test.ts` pins it to `public/wr-mark.svg`.
+The mark is served from the app's own origin, so the CSP is unchanged (`img-src 'self'`). There is no other ESG logo in the repo. A deployment brands itself with `BRAND_NAME`, `BRAND_PRODUCT`, `BRAND_INITIALS` (one or
 two letters), `BRAND_TONE` (`indigo`, `deep` or `glow`), `BRAND_LOGO` (an image file, served at `/api/brand/logo`) and
 `BRAND_TITLE` (see `.env.local.example`). For example, a firm's own branding:
 

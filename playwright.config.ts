@@ -8,7 +8,7 @@ const BASE_URL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${PORT}`;
 export default defineConfig({
   testDir: "./tests/e2e",
   // US-276: the config-file specs need servers without WIKI_DIRS; they run through playwright.config-file.config.ts (so does US-277's settings.spec.ts).
-  testIgnore: ["**/config-file.spec.ts", "**/settings.spec.ts"],
+  testIgnore: ["**/config-file.spec.ts", "**/settings.spec.ts", "**/brand-initials.spec.ts"],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

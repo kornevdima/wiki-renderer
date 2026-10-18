@@ -142,9 +142,9 @@ Set these in `.env.local`. Only `WIKI_DIRS` is required. `.env.local.example` li
 | `WIKI_PRINT_FILE_TITLE` | `false` | A page with no `title` in its frontmatter and no heading of its own gets its file name as a heading. That heading shows on screen but is left out of print; `true` prints it too. |
 | `BRAND_NAME` | `Wiki Renderer` | The name in the header. |
 | `BRAND_PRODUCT` | `Wikis` | The product line next to the name. |
-| `BRAND_INITIALS` | from `BRAND_NAME` (`WR`) | One or two letters on the logo square. |
-| `BRAND_TONE` | `indigo` | The logo square's colour: `indigo`, `deep` or `glow`. |
-| `BRAND_LOGO` | none (the initials show) | Path to an image file (PNG, JPG, SVG or WebP) shown instead of the initials. |
+| `BRAND_INITIALS` | none (the WR mark shows) | One or two letters on the logo square, instead of the WR mark. |
+| `BRAND_TONE` | `indigo` | The colour of the initials square: `indigo`, `deep` or `glow`. It does not apply to the WR mark. |
+| `BRAND_LOGO` | none (the WR mark shows) | Path to an image file (PNG, JPG, SVG or WebP) shown instead of the WR mark. |
 | `BRAND_TITLE` | the value of `BRAND_NAME` | The end of every browser tab title: `<page> · <wiki> · Wiki Renderer` by default. |
 | `LOG_LEVEL` | `debug` with `npm run dev`, `info` with `npm start` | How much the server logs: `fatal`, `error`, `warn`, `info`, `debug` or `trace`. |
 | `PORT` | `3000` | The port. Next.js reads it from the shell when it starts, so set it there: `PORT=3001 npm run dev`. |
@@ -203,15 +203,26 @@ save keeps untouched text byte-identical, and the other details.
 
 ## Branding
 
-By default the app is called **Wiki Renderer**, the product line is **Wikis**, the logo is a **WR** square on the
-indigo ground, and tab titles end "· Wiki Renderer". To use your own branding, set the `BRAND_*` variables, for
-example:
+By default the app is called **Wiki Renderer**, the product line is **Wikis**, the logo is **WR** in white on the ESG
+background (a rounded square), and tab titles end "· Wiki Renderer". The browser tab icon is the same mark.
+
+To use your own branding, set the `BRAND_*` variables when you build or start the app, for example:
 
 ```bash
 BRAND_NAME="The Firm"
 BRAND_TITLE="The Firm Wikis"
 BRAND_LOGO=/path/to/logo.png
 ```
+
+What replaces the WR mark in the header:
+
+- `BRAND_LOGO` shows your image.
+- `BRAND_INITIALS` shows those one or two letters on the `BRAND_TONE` square.
+- A `BRAND_NAME` of your own with neither of those shows the first letters of the name on the same square.
+
+The tab icon stays the WR mark in every case; `BRAND_*` does not change it. To change the mark itself, replace `public/wr-mark.svg` and the
+icons in `src/app/` (`icon.svg`, `icon.png`, `apple-icon.png`, `favicon.ico`), or regenerate them with `node scripts/make-mark.mjs --ground <esg-background.svg>`
+(the ESG design system's ground; the script needs the dev dependencies and Playwright's Chromium, and is not part of the build).
 
 ## License
 

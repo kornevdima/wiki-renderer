@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, relative, resolve } from "node:path";
+import { dirname, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { compile } from "tailwindcss";
@@ -163,10 +163,18 @@ export function scanSource(file: string, text: string): Finding[] {
   return out;
 }
 
+/**
+ * The generated tab icon (US-289, `scripts/make-mark.mjs`) is the one file with colour literals: they are the design system's ESG
+ * ground (`esg-background.svg`) copied as is, plus the lettering's white, and an `icon.svg` has to be a static file (no `var(--token)`).
+ * It is not edited by hand: `make-mark.test.ts` pins it byte for byte to `public/wr-mark.svg`.
+ */
+const GENERATED_ICON = "app/icon.svg";
+
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     const p = resolve(dir, e.name);
     if (e.isDirectory()) return sourceFiles(p);
+    if (relative(SRC, p).split(sep).join("/") === GENERATED_ICON) return []; // POSIX form on every platform: exactly this one file
     return /\.(?:[cm]?[jt]sx?|css|scss|svg)$/.test(e.name) && !/\.(?:test|itest)\.[cm]?[jt]sx?$/.test(e.name) ? [p] : [];
   });
 }

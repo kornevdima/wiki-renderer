@@ -34,7 +34,8 @@ describe("the interface language is always English", () => {
     const mod = await import("../i18n/request");
     const config = await (mod.default as unknown as () => Promise<{ locale: string; messages: Record<string, unknown> }>)();
     expect(config.locale).toBe("en");
-    expect(config.messages).toEqual(messages);
+    // The messages as shipped, plus the one thing the default branding adds: the WR mark as the brand's logo (US-289).
+    expect(config.messages).toEqual({ ...messages, brand: { ...(messages as { brand: object }).brand, logo: "/wr-mark.svg" } });
     vi.unstubAllEnvs();
   });
 

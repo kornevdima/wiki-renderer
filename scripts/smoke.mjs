@@ -198,6 +198,15 @@ async function main() {
       assert(page.status === 200 && (await page.text()).includes("Sample wiki"), `page ${page.status}`);
     });
 
+    await step("the tab icons and the WR mark ship in the archive (US-289)", async () => {
+      for (const [file, type] of [["/favicon.ico", "image/x-icon"], ["/icon.svg", "image/svg+xml"], ["/wr-mark.svg", "image/svg+xml"]]) {
+        const res = await fetch(`${base}${file}`);
+        const got = res.headers.get("content-type") ?? "";
+        assert(res.status === 200 && got.startsWith(type), `${file} -> ${res.status} ${got}`);
+        await res.arrayBuffer();
+      }
+    });
+
     await step("/settings shows the version footer and --version agrees", async () => {
       const res = await fetch(`${base}/settings`);
       const html = await res.text();

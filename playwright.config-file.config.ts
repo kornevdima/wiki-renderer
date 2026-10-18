@@ -16,12 +16,14 @@ export const CONFIG_DIR = process.env.E2E_CONFIG_DIR ?? path.join(os.tmpdir(), "
 export const SMALL_MAX_BYTES = 2_000_000;
 const FILE_PORT = 3300;
 const ENV_PORT = 3301;
+const INITIALS_PORT = 3302; // US-289 R3: BRAND_INITIALS set
+const NAME_PORT = 3303; // US-289 R3: a custom BRAND_NAME alone
 
 const base = { WIKI_RECHECK_MS: "0" };
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  testMatch: ["config-file.spec.ts", "settings.spec.ts"],
+  testMatch: ["config-file.spec.ts", "settings.spec.ts", "brand-initials.spec.ts"],
   // Serial: the specs share one mutable config file.
   fullyParallel: false,
   workers: 1,
@@ -52,6 +54,20 @@ export default defineConfig({
         WIKI_RENDERER_CONFIG: path.join(CONFIG_DIR, "env-override", "config.json"),
         WIKI_PRINT_FILE_TITLE: "true",
       },
+    },
+    {
+      command: `next start --hostname 127.0.0.1 --port ${INITIALS_PORT}`,
+      url: `http://127.0.0.1:${INITIALS_PORT}/api/health`,
+      reuseExistingServer: false,
+      timeout: 120_000,
+      env: { ...base, WIKI_DIRS: "sample=tests/fixtures/sample-wiki", WIKI_RENDERER_CONFIG: path.join(CONFIG_DIR, "brand-initials", "config.json"), BRAND_INITIALS: "TF" },
+    },
+    {
+      command: `next start --hostname 127.0.0.1 --port ${NAME_PORT}`,
+      url: `http://127.0.0.1:${NAME_PORT}/api/health`,
+      reuseExistingServer: false,
+      timeout: 120_000,
+      env: { ...base, WIKI_DIRS: "sample=tests/fixtures/sample-wiki", WIKI_RENDERER_CONFIG: path.join(CONFIG_DIR, "brand-name", "config.json"), BRAND_NAME: "Acme Docs" },
     },
   ],
 });
