@@ -24,6 +24,8 @@ export interface StartDeps {
   /** Resolves true once the server answers; false when it did not within the wait. */
   waitReady: (url: string) => Promise<boolean>;
   openUrl: (url: string) => void;
+  /** Called once the server answers, after the "is running" line (the update check of US-279 hangs here). Must not throw. */
+  onReady?: () => void;
   onStop: (stop: () => void) => void;
   /** Runs `fn` after `ms`; returns a canceller. The stop escalation uses it. */
   schedule?: (fn: () => void, ms: number) => () => void;
@@ -125,6 +127,7 @@ export async function runStart(opts: { plan: PortPlan; open: boolean; verbose?: 
     ready = true;
     deps.out(cliCopy.running(deps.version, url));
     if (opts.open) deps.openUrl(url);
+    deps.onReady?.();
   });
 
   return exited;

@@ -58,9 +58,31 @@ describe("release workflow", () => {
   });
 
   it("unpacks into a fresh folder and smoke-tests before the archive is uploaded", () => {
-    const steps = ["scripts/package.mjs", "ci-tools.mjs unpack", "portable-contents.test.ts", "playwright install", "scripts/smoke.mjs", "upload-artifact"].map((p) => indexOf(pack, new RegExp(p.replace(/[.]/g, "\\."))));
+    const steps = ["scripts/package.mjs", "ci-tools.mjs unpack", "portable-contents.test.ts", "playwright install", "scripts/smoke.mjs", "scripts/install-check.mjs", "upload-artifact"].map((p) => indexOf(pack, new RegExp(p.replace(/[.]/g, "\\."))));
     expect(steps.every((i) => i >= 0)).toBe(true);
     expect([...steps].sort((a, b) => a - b)).toEqual(steps);
+  });
+
+  it("runs the one-line installer on its own archive after the smoke and before the upload (US-279 R7)", () => {
+    const step = pack.steps[indexOf(pack, /scripts\/install-check\.mjs/)];
+    expect(step?.name).toBe("Test the one-line installer");
+    expect(step?.run).toContain("release/out/wiki-renderer-${VERSION}-${PLATFORM}-${ARCH}.*");
+    expect(step?.run).toContain('--version "$VERSION"');
+    expect(step?.run).not.toMatch(/\$\{\{/);
+  });
+
+  it("checks on Windows that an unexpanded user PATH entry survives, on a throwaway registry value and never the real Path (US-279)", () => {
+    const script = readFileSync(path.resolve("scripts/install-check.mjs"), "utf8");
+    expect(script).toContain('const TEST_PATH_VALUE = "WikiRendererTestPath"');
+    expect(script).toContain("WIKI_RENDERER_PATH_VALUE_NAME = TEST_PATH_VALUE");
+    expect(script).toContain("%USERPROFILE%");
+    expect(script).toContain("fake-dir");
+    expect(script).toContain("RegistryValueKind]::ExpandString");
+    expect(script).toContain("DoNotExpandEnvironmentNames");
+    expect(script).toMatch(/DeleteValue\('\$\{TEST_PATH_VALUE\}'/);
+    expect(script).toContain('"--bogus"');
+    expect(script).toContain("bogus.status !== 2");
+    expect(script).not.toMatch(/GetValue\('Path'|SetValue\('Path'/);
   });
 
   it("publishes only after all five package jobs, with write access on that job alone", () => {

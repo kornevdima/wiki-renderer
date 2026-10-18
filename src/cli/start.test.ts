@@ -265,3 +265,26 @@ describe("waitForServer", () => {
     expect(await waitForServer("http://x", 300, never)).toBe(false);
   });
 });
+
+describe("onReady (the update check hangs here)", () => {
+  it("runs after the running line, and not when the server never answers", async () => {
+    const order: string[] = [];
+    const d = deps({ onReady: () => order.push("ready") });
+    d.base.out = (l) => order.push(l);
+    const run = runStart({ plan: fixed(4800), open: false }, d.base);
+    await vi.waitFor(() => expect(order).toHaveLength(2));
+    expect(order[0]).toMatch(/is running at/);
+    expect(order[1]).toBe("ready");
+    d.child.exit(0);
+    await run;
+
+    const never = vi.fn();
+    const d2 = deps({ waitReady: async () => false, onReady: never });
+    const run2 = runStart({ plan: fixed(4801), open: false }, d2.base);
+    await vi.waitFor(() => expect(d2.spawnServer).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 20));
+    d2.child.exit(0);
+    await run2;
+    expect(never).not.toHaveBeenCalled();
+  });
+});

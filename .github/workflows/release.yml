@@ -1,6 +1,6 @@
 # US-278: one portable archive per platform on GitHub Releases. Pushing a tag v<x.y.z> builds once, packages and
 # smoke-tests on each platform's own runner, and only when all five pass publishes the release with SHA256SUMS.
-# Nothing here signs or notarises: archives are unsigned (the one-line installers of US-279 are the path that never warns).
+# Nothing here signs or notarises: archives are unsigned (the one-line installers of US-279, install.sh and install.ps1, are the path that never warns).
 name: Release
 
 on:
@@ -117,6 +117,11 @@ jobs:
           if [ "$RUNNER_OS" = "Linux" ]; then npx playwright install --with-deps chromium; else npx playwright install chromium; fi
       - name: Smoke test the unpacked app
         run: node scripts/smoke.mjs "$RUNNER_TEMP/unpacked/wiki-renderer-${VERSION}-${PLATFORM}-${ARCH}" --port 3310 --expect-version "$VERSION"
+      # US-279: the one-line installer for this OS (install.sh, or install.ps1 on Windows) against a local server holding this
+      # archive, into a temporary home; then <home>/bin/wiki-renderer --version must print the release version. This is the
+      # only place install.ps1 runs before it is used on a real Windows machine.
+      - name: Test the one-line installer
+        run: node scripts/install-check.mjs release/out/wiki-renderer-${VERSION}-${PLATFORM}-${ARCH}.* --version "$VERSION"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: archive-${{ matrix.platform }}-${{ matrix.arch }}

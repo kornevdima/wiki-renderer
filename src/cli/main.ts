@@ -10,6 +10,7 @@ import { createLineFilter } from "./output-filter";
 import { openBrowser } from "./open-browser";
 import { resolvePortPlan } from "./port-plan";
 import { runStart, waitForServer } from "./start";
+import { DEFAULT_API_BASE, isUpdateCheckEnabled, runUpdateCheck, updateCachePath } from "./update-check";
 import { configFilePath, readUserConfig } from "@/content/runtime/user-config";
 import { readVersion } from "@/lib/version";
 
@@ -82,6 +83,17 @@ async function main(argv: string[]): Promise<number> {
           return child;
         },
         waitReady: (url) => waitForServer(url),
+        onReady: () => {
+          // Off by default: with the check off this does nothing and no request is made.
+          void runUpdateCheck({
+            enabled: isUpdateCheckEnabled(process.env, command.checkUpdates),
+            current: version,
+            platform: process.platform,
+            cachePath: updateCachePath(ctx.configPath),
+            apiBase: process.env.WIKI_RENDERER_API_BASE?.trim() || DEFAULT_API_BASE,
+            out,
+          });
+        },
         openUrl: (url) => {
           openBrowser(url, process.platform, spawn);
         },

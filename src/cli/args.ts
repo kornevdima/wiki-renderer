@@ -6,7 +6,7 @@ import { DEFAULT_APP_PORT } from "@/lib/settings-limits";
 export const DEFAULT_PORT = DEFAULT_APP_PORT;
 
 export type Command =
-  | { kind: "start"; port: number | null; open: boolean; verbose: boolean }
+  | { kind: "start"; port: number | null; open: boolean; verbose: boolean; checkUpdates: boolean }
   | { kind: "add"; folder: string; id?: string }
   | { kind: "remove"; id: string }
   | { kind: "list" }
@@ -40,6 +40,7 @@ export function parseArgs(argv: readonly string[]): ParseResult {
   let port: number | null = null;
   let open = true;
   let verbose = false;
+  let checkUpdates = false;
   let id: string | undefined;
   let sawStartFlag = false;
 
@@ -50,6 +51,9 @@ export function parseArgs(argv: readonly string[]): ParseResult {
       sawStartFlag = true;
     } else if (arg === "--verbose") {
       verbose = true;
+      sawStartFlag = true;
+    } else if (arg === "--check-updates") {
+      checkUpdates = true;
       sawStartFlag = true;
     } else if (arg === "--port" || arg.startsWith("--port=")) {
       const value = arg === "--port" ? argv[(i += 1)] : arg.slice("--port=".length);
@@ -76,9 +80,9 @@ export function parseArgs(argv: readonly string[]): ParseResult {
     case "start":
       if (rest.length > 0) return bad(`start takes no arguments, got ${rest[0]}.`);
       if (id !== undefined) return bad("--id belongs to add.");
-      return { ok: true, command: { kind: "start", port, open, verbose } };
+      return { ok: true, command: { kind: "start", port, open, verbose, checkUpdates } };
     case "add":
-      if (sawStartFlag) return bad("--port, --no-open and --verbose belong to start.");
+      if (sawStartFlag) return bad("--port, --no-open, --verbose and --check-updates belong to start.");
       if (rest.length !== 1) return bad("add needs one folder: wiki-renderer add <folder> [--id <id>].");
       return { ok: true, command: id === undefined ? { kind: "add", folder: rest[0]! } : { kind: "add", folder: rest[0]!, id } };
     case "remove":

@@ -3,7 +3,7 @@ export function helpText(version: string): string {
   return `Wiki Renderer ${version}: read and edit Markdown wikis in your browser.
 
 Usage:
-  wiki-renderer [start] [--port <n>] [--no-open] [--verbose]
+  wiki-renderer [start] [--port <n>] [--no-open] [--verbose] [--check-updates]
   wiki-renderer add <folder> [--id <id>]
   wiki-renderer remove <id>
   wiki-renderer list
@@ -16,15 +16,19 @@ Commands:
   list      Show the wikis: id, name and folder.
 
 Options:
-  --port <n>   Listen on port <n>. A port you choose is never moved.
-  --no-open    Do not open the browser.
-  --verbose    Show the server's own output.
-  --id <id>    The wiki's id for add: lowercase letters, digits and dashes.
-  --version    Print the version.
-  --help       Print this text.
+  --port <n>        Listen on port <n>. A port you choose is never moved.
+  --no-open         Do not open the browser.
+  --verbose         Show the server's own output.
+  --check-updates   After start, say if a newer version exists. Asks GitHub at most once a day.
+  --id <id>         The wiki's id for add: lowercase letters, digits and dashes.
+  --version         Print the version.
+  --help            Print this text.
 
 Port: 4700 by default; when it is taken the next free one up to 4709 is used and the app says so.
 The order is --port, then WIKI_RENDERER_PORT, then "port" in config.json (also set in Settings, Server), then that default.
+
+Updates: the app makes no request unless you turn the check on, with --check-updates or WIKI_RENDERER_UPDATE_CHECK=1.
+To update, run the install line from the README again.
 
 The list is kept in config.json in your user config folder. WIKI_RENDERER_CONFIG names another file.
 When WIKI_DIRS is set it decides the list, and add and remove refuse.

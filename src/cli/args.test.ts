@@ -15,14 +15,14 @@ const message = (argv: string[]) => {
 
 describe("parseArgs", () => {
   it("starts on the default port and opens the browser with no arguments", () => {
-    expect(ok([])).toEqual({ kind: "start", port: null, open: true, verbose: false });
-    expect(ok(["start"])).toEqual({ kind: "start", port: null, open: true, verbose: false });
+    expect(ok([])).toEqual({ kind: "start", port: null, open: true, verbose: false, checkUpdates: false });
+    expect(ok(["start"])).toEqual({ kind: "start", port: null, open: true, verbose: false, checkUpdates: false });
   });
 
   it("takes --port <n>, --port=<n> and --no-open in any order", () => {
-    expect(ok(["--port", "3310", "--no-open"])).toEqual({ kind: "start", port: 3310, open: false, verbose: false });
-    expect(ok(["--no-open", "--port=4000"])).toEqual({ kind: "start", port: 4000, open: false, verbose: false });
-    expect(ok(["start", "--port", "8080"])).toEqual({ kind: "start", port: 8080, open: true, verbose: false });
+    expect(ok(["--port", "3310", "--no-open"])).toEqual({ kind: "start", port: 3310, open: false, verbose: false, checkUpdates: false });
+    expect(ok(["--no-open", "--port=4000"])).toEqual({ kind: "start", port: 4000, open: false, verbose: false, checkUpdates: false });
+    expect(ok(["start", "--port", "8080"])).toEqual({ kind: "start", port: 8080, open: true, verbose: false, checkUpdates: false });
   });
 
   it("refuses a bad port", () => {
@@ -59,7 +59,7 @@ describe("parseArgs", () => {
 });
 
 it("takes --verbose for start only", () => {
-  expect(ok(["--verbose"])).toEqual({ kind: "start", port: null, open: true, verbose: true });
+  expect(ok(["--verbose"])).toEqual({ kind: "start", port: null, open: true, verbose: true, checkUpdates: false });
   expect(message(["add", "x", "--verbose"])).toMatch(/belong to start/);
 });
 
@@ -75,4 +75,11 @@ describe("parsePort", () => {
     expect(parsePort("0")).toBeNull();
     expect(parsePort("3000x")).toBeNull();
   });
+});
+
+it("takes --check-updates for start only", () => {
+  expect(ok(["--check-updates"])).toEqual({ kind: "start", port: null, open: true, verbose: false, checkUpdates: true });
+  expect(ok(["start", "--check-updates", "--no-open"])).toEqual({ kind: "start", port: null, open: false, verbose: false, checkUpdates: true });
+  expect(message(["list", "--check-updates"])).toMatch(/belong to start|takes no arguments/);
+  expect(message(["add", "x", "--check-updates"])).toMatch(/belong to start/);
 });

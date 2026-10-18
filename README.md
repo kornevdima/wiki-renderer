@@ -34,9 +34,35 @@ there is no sign-in, and anyone who can reach the port can read every configured
 Changes you make to the files in another editor show on the next request, after `WIKI_RECHECK_MS` (1 second by
 default). Changes to `.env.local` need a restart of `npm run dev`.
 
-## Install from a release
+## Install
 
-You do not need Node, git or `npm install` for this. Each release on GitHub (https://github.com/kornevdima/wiki-renderer/releases)
+You do not need Node, git or `npm install` for this. One line downloads the build for your system, checks it against the release's `SHA256SUMS`, and puts `wiki-renderer` on your PATH.
+
+macOS and Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kornevdima/wiki-renderer/main/install.sh | sh
+```
+
+Windows (PowerShell):
+
+```powershell
+irm https://raw.githubusercontent.com/kornevdima/wiki-renderer/main/install.ps1 | iex
+```
+
+Then run `wiki-renderer`.
+
+- **Where it goes:** `~/.wiki-renderer/<version>/` on macOS and Linux, `%LOCALAPPDATA%\wiki-renderer\<version>\` on Windows. `wiki-renderer` in the `bin` folder beside them points at the current version. `WIKI_RENDERER_HOME` names another folder.
+- **The PATH:** on Windows the script adds `bin` to your user PATH (open a new terminal). On macOS and Linux it prints the one line to add to your shell's rc file (`~/.zshrc`, `~/.bashrc`, `~/.bash_profile` or `~/.profile`) when `bin` is not already on the PATH; it never edits the file itself.
+- **Update:** run the same line again. The new version is unpacked beside the old one and `bin` points at it; older versions stay (delete a folder to remove it). Running it when the latest is already installed says so and changes nothing. Your wikis and your config file are never touched.
+- **A chosen version:** `WIKI_RENDERER_VERSION=0.2.0` for the install command: `curl -fsSL https://raw.githubusercontent.com/kornevdima/wiki-renderer/main/install.sh | WIKI_RENDERER_VERSION=0.2.0 sh`, or `$env:WIKI_RENDERER_VERSION = '0.2.0'` before the `irm` line. Going back to a version that is already installed moves `bin` back without a download.
+- **Update notice:** off by default, so the app makes no request to anywhere. Start it with `wiki-renderer --check-updates`, or set `WIKI_RENDERER_UPDATE_CHECK=1`, and it asks GitHub for the latest release at most once a day (a plain request that sends nothing about your machine or wikis; the answer is kept in `update-check.json` beside `config.json`). If a newer version exists it prints one line with the command to install it. Being offline never delays or fails the start.
+- **Refusals:** a checksum that does not match stops the install and deletes the download. An OS or CPU with no build, or a machine with neither `curl` nor `wget`, gets one line saying so.
+- **No warning:** `curl` and `irm` do not set the flag that makes macOS Gatekeeper or Windows SmartScreen ask about a browser download, so the scripts never trigger it.
+
+## Install from a release by hand
+
+Each release on GitHub (https://github.com/kornevdima/wiki-renderer/releases)
 carries one archive per system, with its own copy of Node 24 inside:
 
 | System | Archive |
@@ -57,6 +83,7 @@ The app starts on http://127.0.0.1:4700 and opens your browser. It listens on `1
 ./wiki-renderer                       # start on port 4700 (or the next free one) and open the browser
 ./wiki-renderer --port 4800 --no-open # a port of your own, no browser
 ./wiki-renderer --verbose             # also show the server's own output
+./wiki-renderer --check-updates       # say if a newer version exists (see Install, Update notice)
 ./wiki-renderer add ~/notes/wiki      # add a wiki (a relative folder starts from where you typed this)
 ./wiki-renderer add . --id notes      # the same, naming it
 ./wiki-renderer list                  # id, name and folder of each wiki
@@ -72,7 +99,7 @@ The app starts on http://127.0.0.1:4700 and opens your browser. It listens on `1
 - **The archives are not signed.** A browser download carries a flag that makes the system ask once. Clear it for the unpacked folder:
   - macOS: `xattr -dr com.apple.quarantine wiki-renderer-<version>-darwin-arm64`
   - Windows: `Get-ChildItem -Recurse wiki-renderer-<version>-win-x64 | Unblock-File` (or, before unzipping, right-click the zip, Properties, Unblock).
-  - A download with `curl` does not carry the flag, so the one-line install scripts (a later release) never ask.
+  - A download with `curl` does not carry the flag, so the one-line install scripts above never ask.
 
 ## Several wikis
 
