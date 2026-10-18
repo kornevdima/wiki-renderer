@@ -230,16 +230,18 @@ test.describe("US-284 print file-name heading", () => {
     await expect(h1).toBeVisible();
   });
 
-  // The meta line prints and the folded outline does not (print:hidden), whatever happens to the heading before them.
+  // The meta line prints and nothing of the outline does (US-292: no list under the title; the top-bar button is print:hidden), whatever happens to the heading before them.
   for (const [name, path] of [["no title", NO_TITLE], ["frontmatter title", FM_TITLE], ["own h1", OWN_H1]] as const) {
-    test(`R5: ${name}: the meta line prints and the folded outline stays out of print`, async ({ page }) => {
-      await page.setViewportSize({ width: 800, height: 900 }); // below 1200 px the folded outline shows, the rail's copy does not
+    test(`R5: ${name}: the meta line prints, there is no outline under the title, and the outline button stays out of print`, async ({ page }) => {
+      await page.setViewportSize({ width: 800, height: 900 }); // below 1200 px the top-bar button shows, the rail's copy does not
       await readyAndHeading(page, path);
       await expect(page.getByTestId("page-meta")).toBeVisible();
-      await expect(page.getByTestId("toc-inline")).toBeVisible();
+      await expect(page.getByTestId("toc-inline")).toHaveCount(0);
+      await expect(page.getByTestId("outline-trigger")).toBeVisible();
       await page.emulateMedia({ media: "print" });
       await expect(page.getByTestId("page-meta")).toBeVisible();
-      await expect(page.getByTestId("toc-inline")).toBeHidden();
+      await expect(page.getByTestId("toc-inline")).toHaveCount(0);
+      await expect(page.getByTestId("outline-trigger")).toBeHidden();
     });
   }
 });

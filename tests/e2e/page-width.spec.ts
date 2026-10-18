@@ -465,7 +465,7 @@ test.describe("US-280 page width", () => {
       const rail = await box(page, ".wr-rail");
       await expect(page.locator(".wr-rail .wr-properties").first()).toBeVisible();
       expect(rail.x).toBeGreaterThanOrEqual(a.x + a.width - 1);
-      await expect(page.locator(".wr-toc--inline").first()).toBeHidden();
+      await expect(page.locator(".wr-toc--inline")).toHaveCount(0);
     });
   }
 
@@ -478,14 +478,14 @@ test.describe("US-280 page width", () => {
     expect(rail.y).toBeGreaterThanOrEqual(a.y + a.height - 1);
   });
 
-  test("R3 Full and a free width keep the rail beside the article, the inline On this page stays hidden", async ({ page, context, baseURL }) => {
+  test("R3 Full and a free width keep the rail beside the article, there is no inline On this page (US-292)", async ({ page, context, baseURL }) => {
     for (const value of ["full", "820"]) {
       await setWidthCookie(context, baseURL, value);
       await openReady(page, RAIL_PAGE);
       const a = await box(page, "[data-testid=\"reader-content\"]");
       const rail = await box(page, ".wr-rail");
       expect(rail.x).toBeGreaterThanOrEqual(a.x + a.width - 1);
-      await expect(page.locator(".wr-toc--inline").first()).toBeHidden();
+      await expect(page.locator(".wr-toc--inline")).toHaveCount(0);
       expect(await fontPx(page, ".wr-prose p")).toBe(16);
       if (value === "full") expect(Math.abs(a.width - 948)).toBeLessThanOrEqual(3);
       else expect(Math.abs(a.width - 820)).toBeLessThanOrEqual(1);
@@ -495,7 +495,7 @@ test.describe("US-280 page width", () => {
     await openReady(page, RAIL_PAGE);
     const a = await box(page, "[data-testid=\"reader-content\"]");
     expect((await box(page, ".wr-rail")).x).toBeGreaterThanOrEqual(a.x + a.width - 1);
-    await expect(page.locator(".wr-toc--inline").first()).toBeHidden();
+    await expect(page.locator(".wr-toc--inline")).toHaveCount(0);
   });
 
   test("R3 a drag past Full clamps at Full and the handle stays on the article's edge", async ({ page, context }) => {

@@ -55,8 +55,7 @@ export interface PageShellProps {
   frontmatter?: FrontmatterField[];
   /**
    * `rendered.outline` (US-219): the page's own h2 and h3 headings, each with its final id. Any entry means the headings carry
-   * copy anchors, so the anchor island is mounted; three or more means the "On this page" list (the rail's copy here, the folded
-   * copy is rendered by the page under the meta line) and the scroll-spy. Absent on every screen that is not a rendered page.
+   * copy anchors, so the anchor island is mounted; three or more means the "On this page" list (the rail's copy here; below 1200px the top-bar button, US-282) and the scroll-spy. Absent on every screen that is not a rendered page.
    */
   outline?: OutlineEntry[];
   /** The page's Mermaid placeholder count from the render's single pass (`rendered.mermaidBlocks.length`); 0 when absent (US-106). */
@@ -148,7 +147,7 @@ export function PageShell({ wikiId, wiki, sha, tree, activePath, pageTitle, stal
           {hasRail ? (
             // The page rail (SA-MOD Reader UI and print E3-D5): one complementary landmark beside the article, outside <main>.
             // The "On this page" list (US-219) sits above All properties (US-220). Below 1200px the list's rail copy is hidden
-            // (the folded copy under the meta line shows instead) and an aside that holds only that copy is hidden whole.
+            // (the top-bar button opens it instead) and an aside that holds only that copy is hidden whole.
             <aside aria-label={tRail("label")} data-testid="reader-rail" className="wr-rail">
               {hasToc ? <OnThisPage outline={outline} variant="rail" /> : null}
               {hasProperties ? <AllProperties fields={frontmatter} /> : null}

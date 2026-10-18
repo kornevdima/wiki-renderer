@@ -160,9 +160,10 @@ describe("the page meta line, the rail and All properties (US-220)", () => {
 describe("On this page and heading anchors (US-219)", () => {
   const ruleBody = (css: string, selector: string): string => rules(css).find(([sel]) => sel.join() === selector)?.[1] ?? "";
 
-  it("shows exactly one list copy per width: the rail copy from 1200px, the folded copy below", () => {
+  it("shows the rail copy from 1200px only, and has no folded copy under the title (US-292)", () => {
     expect(ruleBody(reader, ".wr-layout .wr-toc--rail")).toMatch(/display:\s*none/);
-    expect(reader).toMatch(/@media \(min-width: 1200px\)\s*\{\s*\.wr-layout \.wr-toc--rail\s*\{\s*display:\s*block;\s*\}\s*\.wr-layout \.wr-toc--inline\s*\{\s*display:\s*none;/);
+    expect(reader).toMatch(/@media \(min-width: 1200px\)\s*\{\s*\.wr-layout \.wr-toc--rail\s*\{\s*display:\s*block;\s*\}/);
+    expect(reader).not.toContain("wr-toc--inline");
   });
 
   it("an aside holding only the list is hidden below 1200px, so no empty landmark is left", () => {
@@ -175,7 +176,7 @@ describe("On this page and heading anchors (US-219)", () => {
     expect(body).toMatch(/font-weight:\s*700/);
   });
 
-  it("the list rules out-rank the article's .wr-prose rules the folded copy sits under", () => {
+  it("the list rules out-rank the article's .wr-prose rules", () => {
     const screen = reader.slice(0, reader.indexOf("@media print"));
     for (const [selectors] of rules(screen).filter(([sel]) => sel.some((s) => s.includes(".wr-toc")))) {
       // `rules()` splits on commas, so a `:is(.wr-layout, .wr-toc-pop)` group arrives as two fragments.

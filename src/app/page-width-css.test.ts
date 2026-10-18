@@ -83,7 +83,7 @@ describe("the page width's screen rules (US-280)", () => {
     expect(reader).not.toMatch(/container-type/);
     for (const m of reader.matchAll(/(html\[data-page-width[^{]*)\{([^}]*)\}/g)) {
       if (/\.wr-layout--aside\s*$/.test(m[1]!)) expect(m[2], m[0]).toMatch(/var\(--sidebar-w\)/);
-      expect(m[1], m[0]).not.toMatch(/\.wr-(rail|toc--rail|toc--inline)\b/);
+      expect(m[1], m[0]).not.toMatch(/\.wr-(rail|toc--rail)\b/);
     }
   });
 

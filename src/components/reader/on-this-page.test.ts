@@ -33,11 +33,13 @@ describe("OnThisPage (US-219)", () => {
     expect(out).toContain('<li><a href="#user-content-b" data-toc="user-content-b">Beta</a><ul><li><a href="#user-content-b1"');
     expect(out.match(/<ul>/g)).toHaveLength(2);
   });
-  it("the folded copy is a closed native details whose summary is its name, not open, and has no landmark", () => {
-    const out = html(createElement(OnThisPage, { outline: SIX, variant: "folded" }));
-    expect(out).toMatch(/^<details class="wr-toc wr-toc--inline print:hidden" data-testid="toc-inline"><summary>On this page<\/summary>/);
-    expect(out).not.toMatch(/<details[^>]*\bopen\b/);
-    expect(out).not.toContain("<nav");
+  it("US-292: there is no folded variant: the component renders no details element and no toc-inline", () => {
+    for (const variant of ["rail", "popover"] as const) {
+      const out = html(createElement(OnThisPage, { outline: SIX, variant }));
+      expect(out).not.toContain("<details");
+      expect(out).not.toContain("toc-inline");
+    }
+    expect(shell({ outline: SIX })).not.toContain("toc-inline");
   });
   it("the popover copy (US-282) is a nav named by its own title id, holds the same entries in order, and does not print-hide itself", () => {
     const out = html(createElement(OnThisPage, { outline: SIX, variant: "popover" }));
@@ -48,7 +50,7 @@ describe("OnThisPage (US-219)", () => {
   });
   it("renders no mark on the server even when the store holds a section (the server snapshot is null, so hydration matches)", () => {
     setCurrentSection("user-content-c");
-    for (const variant of ["rail", "folded", "popover"] as const) {
+    for (const variant of ["rail", "popover"] as const) {
       expect(html(createElement(OnThisPage, { outline: SIX, variant }))).not.toContain("aria-current");
     }
   });

@@ -10,16 +10,15 @@ import { getCurrentSection, getServerSection, pinSection, subscribeSection } fro
 
 /**
  * The "On this page" list (US-219, FR-053, SA-MOD Reader UI and print E3-2, E3-D5). The caller renders it only when
- * `showsOutline(outline)`; there is no empty state here. It exists in two server-rendered copies and CSS shows one: `rail` in the
- * page rail from 1200px (a `nav` named by its visible title) and `folded` under the meta line below it (a closed native
- * `<details>` named by its summary, not Radix). `display: none` takes the hidden copy out of the accessibility tree and the tab
- * order. Both read the one current id from the section store, so they never disagree.
+ * `showsOutline(outline)`; there is no empty state here. The `rail` copy is server-rendered in the page rail and CSS shows it from 1200px (a `nav` named by its
+ * visible title); `display: none` takes it out of the accessibility tree and the tab order below that. US-292: there is no list under
+ * the title any more; below 1200px the top-bar button's popover is the way in. Both copies read the one current id from the section store.
  *
  * Entries are plain `<a href="#<id>">` (they jump without script; the id is the one the heading, its anchor and a wikilink share).
  * The current entry has `aria-current="location"`, the selection wash and bold (`wr-reader.css`), so colour is never the only
- * cue. A click marks its entry at once and holds it until the reader next scrolls (`pinSection`). Neither copy prints.
+ * cue. A click marks its entry at once and holds it until the reader next scrolls (`pinSection`). The rail copy does not print.
  *
- * US-282: a third copy, `popover`, renders only inside the top bar's popover (`OutlinePopover`, opened on demand below 1200px, so it
+ * US-282: a second copy, `popover`, renders only inside the top bar's popover (`OutlinePopover`, opened on demand below 1200px, so it
  * is client-only and never in the server HTML). It is the rail's markup with its own title id; `onNavigate` closes the popover.
  */
 export function OnThisPage({
@@ -28,7 +27,7 @@ export function OnThisPage({
   onNavigate,
 }: {
   outline: readonly OutlineEntry[];
-  variant: "rail" | "folded" | "popover";
+  variant: "rail" | "popover";
   /** The `popover` copy only (US-282): called after an entry is chosen, so the popover can close. */
   onNavigate?: () => void;
 }) {
@@ -58,14 +57,6 @@ export function OnThisPage({
     </ul>
   );
 
-  if (variant === "folded") {
-    return (
-      <details className="wr-toc wr-toc--inline print:hidden" data-testid="toc-inline">
-        <summary>{t("title")}</summary>
-        {list}
-      </details>
-    );
-  }
   if (variant === "popover") {
     return (
       <nav className="wr-toc wr-toc--popover" aria-labelledby="toc-title-popover" data-testid="toc-popover">

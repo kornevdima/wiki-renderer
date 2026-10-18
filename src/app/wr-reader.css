@@ -110,12 +110,11 @@ tt,
 }
 
 /*
- * "On this page" (US-219, FR-053, SA-MOD Reader UI and print E3-2, E3-D5): the page's h2 and h3, nested, in two server-rendered copies
- * of which CSS shows one. The rail copy sits in the page rail from 1200px; the folded copy is a native <details> under the meta line
- * inside <main> below that. Selectors carry `.wr-layout` as the mockup does: the folded copy lives inside `.wr-prose`, whose
- * unlayered `ul`, `li`, `a`, `details` and `summary` rules would otherwise restyle it. The current entry has the selection wash and
+ * "On this page" (US-219, FR-053, SA-MOD Reader UI and print E3-2, E3-D5): the page's h2 and h3, nested, in the page rail from 1200px
+ * and, on demand, in the top bar's popover (US-282); US-292 removed the folded copy under the title. Selectors carry `.wr-layout` as
+ * the mockup does, so they out-rank the article's unlayered `.wr-prose` rules. The current entry has the selection wash and
  * bold as well as `aria-current="location"`, so colour is never the only cue. An aside that holds only the list shows nowhere
- * below 1200px (its list is the hidden copy) and never prints.
+ * below 1200px (its list is the hidden rail copy) and never prints.
  */
 :is(.wr-layout, .wr-toc-pop) .wr-toc li,
 :is(.wr-layout, .wr-toc-pop) .wr-toc li + li {
@@ -168,27 +167,6 @@ tt,
 .wr-layout .wr-toc--rail {
     display: none;
 }
-.wr-layout .wr-toc--inline {
-    margin: 0 0 var(--space-24);
-    padding: 0 var(--space-16);
-    border: 1px solid var(--border);
-    border-radius: var(--ds-radius-md);
-}
-.wr-layout .wr-toc--inline > summary {
-    align-items: center;
-    min-height: var(--control-h-m);
-    padding: 0;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    font-weight: 600;
-}
-.wr-layout .wr-toc--inline > summary::before {
-    margin-top: 0;
-    background-color: var(--muted-foreground);
-}
-.wr-layout .wr-toc--inline > ul {
-    margin: 0 0 var(--space-12);
-}
 /* US-282: the popover copy. The popover is portaled to <body>, outside .wr-layout, so the list's shared rules above name .wr-toc-pop
    as well. Only what is the popover's own is here: a flex column capped at 60dvh whose list scrolls, and 40px entries. */
 .wr-toc-pop .wr-toc--popover {
@@ -210,9 +188,6 @@ tt,
 @media (min-width: 1200px) {
     .wr-layout .wr-toc--rail {
         display: block;
-    }
-    .wr-layout .wr-toc--inline {
-        display: none;
     }
 }
 @media (max-width: 1199.98px) {
@@ -342,7 +317,7 @@ tt,
 }
 
 @media print {
-    /* Neither the list, its folded copy nor the anchors print; an anchor with no icon and no text must not reserve space. An aside
+    /* Neither the list nor the anchors print; an anchor with no icon and no text must not reserve space. An aside
        that holds only the list is hidden whole, so no empty box is left (US-219). */
     .wr-toc,
     .wr-toc-pop,

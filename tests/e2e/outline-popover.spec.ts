@@ -126,8 +126,10 @@ test.describe("US-282 outline popover", () => {
       if (shows) {
         await expect(trigger(page)).toBeVisible();
         await expect(page.getByTestId("toc-rail")).toBeHidden();
+        await expect(page.getByTestId("toc-inline")).toHaveCount(0); // US-292: no list under the title
       } else {
         await expect(trigger(page)).toBeHidden();
+        await expect(page.getByTestId("toc-inline")).toHaveCount(0);
         await expect(page.getByTestId("toc-rail")).toBeVisible();
         await expect(page.getByTestId("toc-rail").getByRole("link", { name: "Section 1" })).toBeVisible();
       }

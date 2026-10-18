@@ -6,8 +6,6 @@ import { getTranslations } from "next-intl/server";
 import { DocumentTitle, EmptyWikiTitle } from "@/components/reader/document-title-tag";
 import { diagramSetKey } from "@/components/reader/diagram-set-key";
 import { MermaidHydrator } from "@/components/reader/mermaid-hydrator";
-import { OnThisPage } from "@/components/reader/on-this-page";
-import { showsOutline } from "@/components/reader/outline-tree";
 import { PageMeta } from "@/components/reader/page-meta";
 import { PageShell } from "@/components/reader/page-shell";
 import { UnavailableView } from "@/components/reader/unavailable-view";
@@ -194,8 +192,7 @@ export default async function WikiPage({
       <Fragment key={rendered.path}>
         {showTitleHeading ? <h1 className={titleFromFileName && !printFileTitle() ? "wr-file-title" : undefined}>{rendered.title}</h1> : rendered.leadHeading}
         <PageMeta fields={rendered.frontmatterView} />
-        {/* US-219: the folded "On this page" list, under the meta line; the rail's copy is `PageShell`'s. CSS shows one per width. */}
-        {showsOutline(rendered.outline) ? <OnThisPage outline={rendered.outline} variant="folded" /> : null}
+        {/* US-292: no "On this page" list under the title; below 1200px the top-bar button (US-282) is the way in, from 1200px the rail's copy (`PageShell`'s). */}
         {showTitleHeading || !rendered.leadHeading ? rendered.content : rendered.body}
       </Fragment>
       <MermaidHydrator pageKey={rendered.path} blocks={rendered.mermaidBlocks} />

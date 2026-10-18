@@ -220,7 +220,7 @@ test.describe("US-281 sidebar collapse", () => {
       expect(await cookie(context, SIDEBAR_COOKIE)).toBe("collapsed");
       await expect.poll(async () => Math.abs((await width(page, CONTENT)) - LANDSCAPE_PX)).toBeLessThanOrEqual(1.5);
       await expect(page.getByTestId("toc-rail")).toBeVisible();
-      await expect(page.getByTestId("toc-inline")).toBeHidden();
+      await expect(page.getByTestId("toc-inline")).toHaveCount(0);
       const article = (await page.locator(CONTENT).boundingBox())!;
       const rail = (await page.getByTestId("reader-rail").boundingBox())!;
       expect(rail.x).toBeGreaterThanOrEqual(article.x + article.width - 1);
@@ -381,7 +381,7 @@ test.describe("US-281 sidebar collapse", () => {
       await open(page, RAIL_PAGE);
       await expect(page.locator(SHELL)).not.toHaveAttribute("data-sidebar-collapsed", /.*/); // the shell only: the button is what R1 covers
       await expect(page.getByTestId("toc-rail")).toBeVisible();
-      await expect(page.getByTestId("toc-inline")).toBeHidden();
+      await expect(page.getByTestId("toc-inline")).toHaveCount(0);
       const article = (await page.locator(CONTENT).boundingBox())!;
       const rail = (await page.getByTestId("reader-rail").boundingBox())!;
       expect(article.width).toBeLessThan(LANDSCAPE_PX - 8);
@@ -399,7 +399,7 @@ test.describe("US-281 sidebar collapse", () => {
       await expandButton(page).click();
       await expectCollapsed(page, false);
       await expect(page.getByTestId("toc-rail")).toBeVisible();
-      await expect(page.getByTestId("toc-inline")).toBeHidden();
+      await expect(page.getByTestId("toc-inline")).toHaveCount(0);
       await expect.poll(async () => width(page, CONTENT)).toBeLessThan(LANDSCAPE_PX - 8);
       expect(await cookie(context, WIDTH_COOKIE)).toBe("a4-landscape");
     });
@@ -438,7 +438,7 @@ test.describe("US-281 sidebar collapse", () => {
       await open(page, RAIL_PAGE);
       await expect(page.locator(SHELL)).not.toHaveAttribute("data-sidebar-collapsed", /.*/); // the shell only: the button is what R1 covers
       await expect(page.getByTestId("toc-rail")).toBeVisible();
-      await expect(page.getByTestId("toc-inline")).toBeHidden();
+      await expect(page.getByTestId("toc-inline")).toHaveCount(0);
       const article = (await page.locator(CONTENT).boundingBox())!;
       const rail = (await page.getByTestId("reader-rail").boundingBox())!;
       expect(article.width).toBeLessThan(718.11 - 8);
