@@ -32,6 +32,7 @@ else (branding stays build-time env). The file is re-read when its mtime changes
 server with an empty home page naming the path; a bad file keeps the last good list and the home page names the problem.
 `src/content/runtime/user-config.ts` is the one reader and atomic writer (`writeUserConfig`); `getWikiList()` in
 `runtime/index.ts` returns `{ wikis, source: "env" | "file", managedByEnv, configPath, error? }`.
+**Settings** (`/settings`, in the settings menu) is how an installed app adds, renames, reorders and removes wikis and sets the print heading; editing the config file by hand is still fine in dev.
 
 `WIKI_DIRS` is the override: when set, the file's wikis are ignored (`managedByEnv`) and a bad value exits at startup.
 It holds comma-separated `id=folder` pairs, or bare folders. A bare folder takes its id from the folder's name,
@@ -88,6 +89,8 @@ default is never shown. `tools/registry-add.sh ... brand` copies `public/esg-log
 | `src/content/search/` | MiniSearch index built at snapshot time; client-side query |
 | `src/app/w/[wikiId]/[[...path]]/` | the reader page (landing, page, `?view=source`, `?view=edit`) and `actions.ts` (`savePageAction`, `uploadImageAction`) |
 | `src/app/api/wikis/[wikiId]/{asset,source,search-index}/` | the snapshot's files, by sha; `latest-asset/` redirects the editor's image previews to the current sha |
+| `src/app/settings/`, `src/components/settings/` | the Settings page (`/settings`): `page.tsx`, `actions.ts` (`changeSettingsAction`, the one server action), `failure-copy.ts`; client table, dialogs and print switch |
+| `src/content/runtime/wiki-list-edit.ts` | `applyChange`: Host check, `WIKI_DIRS` refusal, zod validation, add-path checks (`checkNewFolder`, size capped by `measureFolder`), re-read, `writeUserConfig`. `src/lib/host-check.ts` is the Host check |
 | `src/app/page.tsx` | the wiki list, or a redirect when only one wiki is configured |
 | `src/components/reader/` | reader UI (shell, sidebar, nav tree, outline, search dialog, PDF, source view, editor: `edit-view.tsx`, `edit-editor.tsx`) |
 | `src/components/ui/`, `src/components/layout/`, `src/app/esg-theme.css`, `src/fonts/` | **installed** from the ESG design-system registry; don't hand-edit. Installed at design system **v57** (`esg-design-system` `703970a`, published 2026-10-17 as artifact version 125, pulled from the local registry 2026-10-17: every item re-pulled with `--overwrite` at v56 (US-288), then `width-handle` and `theme` at v57 (US-281), no forks of design components, operator ruling 2026-10-17). Restore `package.json` and `package-lock.json` after `registry-add.sh` (the CLI loosens exact pins) |
@@ -138,6 +141,7 @@ comes back through the registry. `src/app/colour-guard.test.ts` fails on any han
 - Don't build a server-side PDF path. Save as PDF is the browser's print.
 - Don't bind to `0.0.0.0` or add a public deploy without first adding access control. There is none.
 - Don't write to a wiki folder anywhere but `local-write.ts`, reached only through `savePageAction`. It saves an existing `.md` page inside the wiki's real root, never creates or deletes files, refuses when the file changed since it was opened, and is off when `WIKI_READ_ONLY=true`. Committing and pushing stay the person's own git steps.
+- Don't write the config file except through `writeUserConfig`, reached from `changeSettingsAction` after the Host check (`isLocalHost`: only `127.0.0.1:<port>` or `localhost:<port>`). A new Settings change goes through `applyChange`, which re-reads the file before it writes.
 - Don't save the editor's Markdown as is: always go through `mergeEdit`, which keeps what the person didn't touch byte-identical.
 - Don't add brand colours, radii, shadows or fonts by hand.
 

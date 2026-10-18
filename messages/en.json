@@ -3,9 +3,10 @@
     "heading": "Wikis",
     "tagline": "Obsidian-flavoured Markdown folders on this machine, rendered read-only.",
     "emptyTitle": "No wikis yet",
-    "emptyText": "Add a wiki to this config file, then reload the page. No restart needed.",
+    "emptyText": "Add a wiki in Settings. No restart needed.",
     "errorTitle": "The config file has a problem",
-    "errorKeep": "The last good list stays in use until it is fixed."
+    "errorKeep": "The last good list stays in use until it is fixed.",
+    "emptyAction": "Open Settings"
   },
   "homeListing": {
     "heading": "Configured wikis"
@@ -158,7 +159,8 @@
     "system": "System"
   },
   "settingsMenu": {
-    "label": "Settings"
+    "label": "Settings",
+    "settings": "Settings"
   },
   "localeSwitcher": {
     "label": "Language",
@@ -248,6 +250,72 @@
       "danger": "Danger",
       "success": "Success",
       "important": "Important"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "tagline": "Which wikis this app reads, and how they print.",
+    "wikis": {
+      "heading": "Wikis",
+      "addLabel": "Add a wiki",
+      "addHint": "The full path of a folder on this computer, or a path starting with ~.",
+      "addPlaceholder": "~/notes/wiki",
+      "addButton": "Add",
+      "adding": "Adding…",
+      "tableLabel": "Wikis",
+      "colName": "Name",
+      "colFolder": "Folder",
+      "colActions": "Actions",
+      "empty": "No wikis yet. Add one above.",
+      "moveUp": "Move {name} up",
+      "moveDown": "Move {name} down",
+      "rowMenu": "Actions for {name}",
+      "rename": "Rename",
+      "remove": "Remove"
+    },
+    "rename": {
+      "title": "Rename wiki",
+      "label": "Name",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "removeDialog": {
+      "title": "Remove {name}?",
+      "text": "{name} leaves the wiki list and the home page. The folder on disk is not touched.",
+      "confirm": "Remove",
+      "cancel": "Cancel"
+    },
+    "close": "Close",
+    "env": {
+      "title": "The wiki list comes from WIKI_DIRS",
+      "text": "WIKI_DIRS is set, so the list is read-only here. Unset it to manage the wikis in Settings."
+    },
+    "configError": {
+      "title": "The config file has a problem",
+      "text": "Settings cannot change the list until the file is fixed: {message}"
+    },
+    "print": {
+      "heading": "Print",
+      "label": "Print a heading made from the file name",
+      "hint": "Shown on printed pages that have no title of their own.",
+      "envNote": "WIKI_PRINT_FILE_TITLE is set, so the environment decides this.",
+      "saveError": "Could not save this setting. Try again."
+    },
+    "errors": {
+      "empty": "Enter a folder path.",
+      "not_absolute": "Use the full path of the folder, or start with ~.",
+      "not_found": "No folder exists at that path.",
+      "not_a_folder": "That path is a file, not a folder.",
+      "unreadable": "This folder cannot be read. Check its permissions.",
+      "already_listed": "This folder is already in the list.",
+      "too_large": "This folder is at least {size}, over the {limit} limit.",
+      "name_empty": "Enter a name.",
+      "name_too_long": "Use at most {max} characters.",
+      "not_listed": "That wiki is no longer in the list. Reload the page.",
+      "forbidden_host": "Settings can only be changed from this computer, at 127.0.0.1 or localhost.",
+      "managed_by_env": "The list comes from WIKI_DIRS and cannot be changed here.",
+      "config_error": "The config file could not be updated: {message}",
+      "invalid": "That input is not valid."
     }
   }
 }

@@ -35,7 +35,8 @@ function slug(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function displayName(id: string): string {
+/** The display name derived from an id (`esg-project` becomes "Esg Project"); the file reader and Settings use the same rule. */
+export function displayName(id: string): string {
   return id
     .split("-")
     .filter(Boolean)
@@ -49,6 +50,12 @@ export function resolveFolder(raw: string, cwd: string, home: string = os.homedi
   return path.resolve(cwd, raw);
 }
 
+/** The id a bare folder gets: its name, or its parent's name when the folder is called `wiki`. Empty when the name has no letters or digits. */
+export function idFromFolder(root: string): string {
+  const base = path.basename(root);
+  return slug(base === "wiki" ? path.basename(path.dirname(root)) : base);
+}
+
 export function parseWikiDirs(value: string, cwd: string, home: string = os.homedir()): LocalWiki[] {
   const wikis: LocalWiki[] = [];
   for (const part of value.split(",").map((p) => p.trim()).filter(Boolean)) {
@@ -58,8 +65,7 @@ export function parseWikiDirs(value: string, cwd: string, home: string = os.home
     const root = resolveFolder(rawFolder, cwd, home);
     let id: string;
     if (eq === -1) {
-      const base = path.basename(root);
-      id = slug(base === "wiki" ? path.basename(path.dirname(root)) : base);
+      id = idFromFolder(root);
     } else {
       id = part.slice(0, eq).trim();
     }

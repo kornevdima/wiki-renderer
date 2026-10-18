@@ -9,6 +9,7 @@ import { Brand } from "@/components/layout/brand";
 import { MAIN_REGION, PAGE_CONTENT_CLASS } from "@/components/layout/main-region";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Topbar } from "@/components/layout/topbar";
 import { AppSettingsMenu } from "@/components/app-settings-menu";
@@ -54,6 +55,13 @@ export default async function Home() {
             titleAs="h2"
             text={t("emptyText")}
             detail={<span data-testid="config-path">{configPath}</span>}
+            actions={
+              <Button asChild>
+                <Link href="/settings" data-testid="open-settings">
+                  {t("emptyAction")}
+                </Link>
+              </Button>
+            }
           />
         ) : null}
         {wikis.length > 0 ? (

@@ -57,7 +57,7 @@ describe("US-286 the settings menu's Language group", () => {
     expect(src).toContain("DropdownMenuLabel");
     expect(src).toContain("DropdownMenuRadioGroup");
     expect(src).toContain("LOCALES.map");
-    expect(messages.settingsMenu).toEqual({ label: "Settings" });
+    expect(messages.settingsMenu).toEqual({ label: "Settings", settings: "Settings" });
     expect(messages.localeSwitcher).toEqual({ label: "Language", en: "English" });
   });
 });

@@ -78,3 +78,31 @@ export function createLocalSource(root: string, maxBytes: number): ContentSource
     },
   };
 }
+
+/**
+ * The folder's size in bytes by stat only, with the same skip rules as `walk` (`skipped`, symlinked folders not followed,
+ * only regular files counted). It stops as soon as the running total passes `maxBytes` and reports `over: true` with
+ * the total so far, a lower bound, so a huge folder (`~`, `/`) is refused quickly instead of walked whole. Nothing is
+ * held or sorted. Settings uses it before a folder is saved. Throws what `readdir` throws.
+ */
+export async function measureFolder(root: string, maxBytes: number = Infinity): Promise<{ bytes: number; over: boolean }> {
+  let bytes = 0;
+  async function visit(dir: string): Promise<boolean> {
+    const dirents = await readdir(dir, { withFileTypes: true });
+    for (const d of dirents) {
+      if (skipped(d.name)) continue;
+      const abs = path.join(dir, d.name);
+      if (d.isDirectory()) {
+        if (await visit(abs)) return true;
+      } else if (d.isFile() || d.isSymbolicLink()) {
+        const s = await stat(abs).catch(() => null);
+        if (s === null || !s.isFile()) continue;
+        bytes += s.size;
+        if (bytes > maxBytes) return true;
+      }
+    }
+    return false;
+  }
+  const over = await visit(root);
+  return { bytes, over };
+}

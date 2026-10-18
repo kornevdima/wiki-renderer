@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { createLocalSource, WikiTooLargeError } from "./local-source";
+import { createLocalSource, measureFolder, WikiTooLargeError } from "./local-source";
 
 let root: string;
 const add = async (name: string, body: string) => {
@@ -64,5 +64,33 @@ describe("createLocalSource", () => {
     await add("big.md", "x".repeat(100));
     const source = createLocalSource(root, 99);
     await expect(source.fetchTree(await source.getLatestSha())).rejects.toBeInstanceOf(WikiTooLargeError);
+  });
+});
+
+describe("measureFolder", () => {
+  it("counts the same files createLocalSource reads and skips the same folders", async () => {
+    await add("index.md", "12345");
+    await add("a/b/page.md", "123");
+    await add(".hidden/x.md", "12");
+    for (const skipped of [".git/obj", "node_modules/pkg/i.js", ".obsidian/app.json", ".trash/old.md", "sub/.DS_Store"]) await add(skipped, "x".repeat(1000));
+    const tree = await createLocalSource(root, 1_000_000).fetchTree("any");
+    expect(await measureFolder(root)).toEqual({ bytes: tree.totalBytes, over: false });
+    expect(tree.totalBytes).toBe(10);
+  });
+
+  it("is not over at exactly the limit, and over one byte above it", async () => {
+    await add("a.md", "12345");
+    expect(await measureFolder(root, 5)).toEqual({ bytes: 5, over: false });
+    expect(await measureFolder(root, 4)).toEqual({ bytes: 5, over: true });
+  });
+
+  it("stops at the first file that passes the limit and reports a lower bound", async () => {
+    await add("a/1.md", "x".repeat(600));
+    await add("a/2.md", "x".repeat(600));
+    await add("b/3.md", "x".repeat(600));
+    await add("c/4.md", "x".repeat(600));
+    const result = await measureFolder(root, 1000);
+    expect(result.over).toBe(true);
+    expect(result.bytes).toBe(1200); // two files, not all four (2400)
   });
 });

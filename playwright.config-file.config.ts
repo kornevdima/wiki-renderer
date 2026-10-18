@@ -4,12 +4,16 @@
 // Both are `next start` over one production build (two `next dev` servers would fight over the .next dev lock), so run
 // `npm run build` first. Run: `npx playwright test -c playwright.config-file.config.ts`. The temp folder is outside the
 // repo and never the real user config folder; the specs create and remove it.
+// US-277 (settings.spec.ts) rides on the same two servers. Extra env it needs: :3300 gets a small WIKI_MAX_BYTES
+// (the size refusal); :3301 gets WIKI_PRINT_FILE_TITLE (the env-managed print switch). HOME is left alone: SWC keeps its native cache
+// there, and the specs reach a `~/...` folder with `..` segments from the real home instead of writing into it.
 import os from "node:os";
 import path from "node:path";
 
 import { defineConfig } from "@playwright/test";
 
 export const CONFIG_DIR = process.env.E2E_CONFIG_DIR ?? path.join(os.tmpdir(), "wiki-renderer-e2e-us276");
+export const SMALL_MAX_BYTES = 2_000_000;
 const FILE_PORT = 3300;
 const ENV_PORT = 3301;
 
@@ -17,7 +21,7 @@ const base = { WIKI_RECHECK_MS: "0" };
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  testMatch: "config-file.spec.ts",
+  testMatch: ["config-file.spec.ts", "settings.spec.ts"],
   // Serial: the specs share one mutable config file.
   fullyParallel: false,
   workers: 1,
@@ -30,7 +34,12 @@ export default defineConfig({
       url: `http://127.0.0.1:${FILE_PORT}/api/health`,
       reuseExistingServer: false,
       timeout: 120_000,
-      env: { ...base, WIKI_DIRS: "", WIKI_RENDERER_CONFIG: path.join(CONFIG_DIR, "file-source", "config.json") },
+      env: {
+        ...base,
+        WIKI_DIRS: "",
+        WIKI_RENDERER_CONFIG: path.join(CONFIG_DIR, "file-source", "config.json"),
+        WIKI_MAX_BYTES: String(SMALL_MAX_BYTES),
+      },
     },
     {
       command: `next start --hostname 127.0.0.1 --port ${ENV_PORT}`,
@@ -41,6 +50,7 @@ export default defineConfig({
         ...base,
         WIKI_DIRS: "envwiki=tests/fixtures/second-wiki",
         WIKI_RENDERER_CONFIG: path.join(CONFIG_DIR, "env-override", "config.json"),
+        WIKI_PRINT_FILE_TITLE: "true",
       },
     },
   ],

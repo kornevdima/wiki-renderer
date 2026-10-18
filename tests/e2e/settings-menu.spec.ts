@@ -69,7 +69,9 @@ test.describe("US-286 settings menu", () => {
       await expect(menu.getByTestId("settings-language-en")).toHaveAttribute("aria-checked", "true");
       await expect(menu.getByTestId("settings-language")).toHaveAttribute("aria-labelledby", /.+/);
       await expect(menu.getByRole("menuitemradio")).toHaveCount(4); // three themes + English: nothing else
-      await expect(menu.getByRole("menuitem")).toHaveCount(0); // no account rows (Sign out, Profile ...)
+      // No account rows (Sign out, Profile ...): the one plain item is the Settings link (US-277), below Language.
+      await expect(menu.getByRole("menuitem")).toHaveCount(1);
+      await expect(menu.getByRole("menuitem")).toHaveAttribute("data-testid", "settings-link");
       await expect(menu.getByRole("separator")).not.toHaveCount(0);
       // Order in the DOM: Theme items, separator, then Language.
       const order = await menu.locator("[role='menuitemradio'], [role='separator']").evaluateAll((els) =>
@@ -78,7 +80,7 @@ test.describe("US-286 settings menu", () => {
       const sep = order.indexOf("separator");
       expect(sep).toBeGreaterThan(0);
       expect(order.slice(0, sep).sort()).toEqual(["narrow-theme-dark", "narrow-theme-light", "narrow-theme-system"]);
-      expect(order.slice(sep + 1)).toEqual(["settings-language-en"]);
+      expect(order.slice(sep + 1)).toEqual(["settings-language-en", "separator"]); // Language, then the separator above Settings (US-277)
     });
   }
 
