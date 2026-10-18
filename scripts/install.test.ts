@@ -432,7 +432,7 @@ run("install.sh on macOS and Linux", { timeout: 120_000 }, () => {
 
   describe("R5: unsupported machines and missing tools", () => {
     let toolbin: string;
-    const TOOLS = ["mkdir", "mktemp", "rm", "tar", "sed", "head", "grep", "awk", "basename", "ln", "mv", "shasum", "sha256sum", "curl", "wget", "cat", "uname", "dirname"];
+    const TOOLS = ["mkdir", "mktemp", "rm", "tar", "gzip", "sed", "head", "grep", "awk", "basename", "ln", "mv", "shasum", "sha256sum", "curl", "wget", "cat", "uname", "dirname"];
     beforeEach(async () => {
       toolbin = path.join(path.dirname(home), "toolbin");
       await mkdir(toolbin);
