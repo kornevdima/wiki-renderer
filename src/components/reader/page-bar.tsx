@@ -40,9 +40,10 @@ export function PageBar({ crumbs, sourceControls, diagramCount, viewKey }: PageB
           <>
             <SaveAsPdfButton diagramCount={diagramCount} viewKey={viewKey} copy={{ button: tPdf("button"), preparing: tPdf("preparing") }} />
             <PdfBrowserHint text={tPdf("chromeHint")} />
-            {sourceControls?.mode === "page" ? <PageWidthReset /> : null}
           </>
         )}
+        {/* The one stored page width is set from the page, the source view and the editor, so Reset is on all three. */}
+        {sourceControls ? <PageWidthReset /> : null}
       </div>
     </div>
   );

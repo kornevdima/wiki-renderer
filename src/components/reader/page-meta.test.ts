@@ -11,13 +11,13 @@ import messages from "../../../messages/en.json";
 import { buildFrontmatterView } from "../../content/render/frontmatter-view";
 import { PageMeta } from "./page-meta";
 
-const line = (frontmatter: Record<string, unknown>): string =>
+const line = (frontmatter: Record<string, unknown>, printed?: boolean): string =>
   renderToStaticMarkup(
     createElement(NextIntlClientProvider, {
       locale: "en",
       timeZone: "UTC",
       messages,
-      children: createElement(PageMeta, { fields: buildFrontmatterView(frontmatter, () => "/w/x/p.md") }),
+      children: createElement(PageMeta, { fields: buildFrontmatterView(frontmatter, () => "/w/x/p.md"), printed }),
     }),
   );
 const text = (markup: string) => markup.replace(/<svg[\s\S]*?<\/svg>/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
@@ -32,6 +32,11 @@ describe("the meta line (US-220)", () => {
     expect(out).toMatch(/Updated <time datetime="2026-10-07">7 Oct 2026<\/time>/i);
     expect(out).toMatch(/<span role="list" aria-label="Tags"[^>]*><span role="listitem"[^>]*>adr<\/span><span role="listitem"[^>]*>reader<\/span><\/span>/);
     expect(text(out)).toBe("Accepted Updated 7 Oct 2026 adr reader");
+  });
+
+  it("prints by default; printed false adds wr-meta--no-print", () => {
+    expect(out).not.toMatch(/wr-meta--no-print/);
+    expect(line({ status: "accepted" }, false)).toMatch(/^<div data-testid="page-meta" class="wr-meta wr-meta--no-print /);
   });
 
   it("is a div of spans: no p, ul or li for the article rules to restyle", () => {

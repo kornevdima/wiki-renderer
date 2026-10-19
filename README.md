@@ -139,7 +139,7 @@ Set these in `.env.local`. Only `WIKI_DIRS` is required. `.env.local.example` li
 | `WIKI_MAX_BYTES` | `52428800` (50 MiB) | The most one wiki may load into memory, in bytes. See [The size cap](#the-size-cap). |
 | `WIKI_SNAPSHOT_STALE_NOTICE_MS` | `0` | When a wiki that loaded before can no longer be loaded, the app keeps showing the last good copy. After this many milliseconds it adds the notice "Content may be out of date". `0` shows it at once. |
 | `WIKI_READ_ONLY` | `false` | `true` hides Edit and refuses saves and image uploads, so the app never writes to a wiki folder. |
-| `WIKI_PRINT_FILE_TITLE` | `false` | A page with no `title` in its frontmatter and no heading of its own gets its file name as a heading. That heading shows on screen but is left out of print; `true` prints it too. |
+| `WIKI_PRINT_FILE_TITLE` | `false` | A page with no `title` in its frontmatter and no heading of its own gets its file name as a heading. That heading and the page details line (status, date, tags) show on screen but are left out of print; `true` prints them too. |
 | `BRAND_NAME` | `Wiki Renderer` | The name in the header. |
 | `BRAND_PRODUCT` | `Wikis` | The product line next to the name. |
 | `BRAND_INITIALS` | none (the WR mark shows) | One or two letters on the logo square, instead of the WR mark. |

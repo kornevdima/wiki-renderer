@@ -142,6 +142,10 @@ describe("the page meta line, the rail and All properties (US-220)", () => {
     expect(ruleBody(print, ".wr-properties > summary::before")).toMatch(/display:\s*none/);
   });
 
+  it("print leaves out the file-name h1 and the meta line marked wr-meta--no-print (US-284, print switch off)", () => {
+    expect(ruleBody(printBlock(), "h1.wr-file-title,.wr-meta--no-print")).toMatch(/display:\s*none\s*!important/);
+  });
+
   it("print keeps All properties whole on a plain wrapper and the dl as well as the details (BUG-066, Safari)", () => {
     const print = printBlock();
     expect(ruleBody(print, ".wr-properties-block,.wr-properties > dl")).toMatch(/break-inside:\s*avoid/);

@@ -325,13 +325,11 @@ tt,
     .wr-rail:not(:has(.wr-properties)) {
         display: none !important;
     }
-    /* US-284: the h1 injected from the file name stays on screen and is left out of print. !important beats the unlayered prose and
-       Tailwind h1 styles, as the sibling hides above do. The meta line then comes first, so it gives back its tuck-under-the-h1 margin. */
-    h1.wr-file-title {
+    /* US-284: the h1 injected from the file name stays on screen and is left out of print, and so does the meta line, unless the
+       print switch (printFileTitle) is on. !important beats the unlayered prose and Tailwind h1 styles, as the sibling hides above do. */
+    h1.wr-file-title,
+    .wr-meta--no-print {
         display: none !important;
-    }
-    h1.wr-file-title + .wr-meta {
-        margin-top: 0;
     }
     .wr-column,
     .wr-column:has(.wr-layout--aside) {
@@ -393,7 +391,7 @@ tt,
 /*
  * The page width (US-280). The reading view's column takes the width that the root layout read from the `wr-page-width` cookie
  * (`html[data-page-width]`: `a4-portrait`, `a4-landscape`, `full` or `free`, with `--wr-page-px` for all but `full`) from 1200px, and
- * only on a rendered page or the editor (`.wr-column[data-width-scope]`, US-291): the source view and the landing keep the measure. Below
+ * only on a rendered page, the source view or the editor (`.wr-column[data-width-scope]`, US-291): the landing keeps the measure. Below
  * 1200px, and with no attribute (Reading, the default), none of this applies and the column is as it always was. Screen only: print is
  * the rules above.
  *

@@ -32,7 +32,7 @@ else (branding stays build-time env). The file is re-read when its mtime changes
 server with an empty home page naming the path; a bad file keeps the last good list and the home page names the problem.
 `src/content/runtime/user-config.ts` is the one reader and atomic writer (`writeUserConfig`); `getWikiList()` in
 `runtime/index.ts` returns `{ wikis, source: "env" | "file", managedByEnv, configPath, error? }`.
-**Settings** (`/settings`, in the settings menu) is how an installed app adds, renames, reorders and removes wikis and sets the print heading; editing the config file by hand is still fine in dev.
+**Settings** (`/settings`, in the settings menu) is how an installed app adds, renames, reorders and removes wikis and sets the print switch (file-name heading and page details); editing the config file by hand is still fine in dev.
 
 `WIKI_DIRS` is the override: when set, the file's wikis are ignored (`managedByEnv`) and a bad value exits at startup.
 It holds comma-separated `id=folder` pairs, or bare folders. A bare folder takes its id from the folder's name,

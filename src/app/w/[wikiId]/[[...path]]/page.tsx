@@ -178,7 +178,8 @@ export default async function WikiPage({
 
   const ast = snapshot.pages.get(requested.path)?.ast;
   const showTitleHeading = ast === undefined || !bodyStartsWithH1(ast);
-  // US-284: the injected h1 made from the file name (no frontmatter title) does not print, unless WIKI_PRINT_FILE_TITLE.
+  // US-284: the injected h1 made from the file name (no frontmatter title) and the meta line do not print, unless WIKI_PRINT_FILE_TITLE.
+  const printTitleAndMeta = printFileTitle();
   const pageFrontmatter = snapshot.pages.get(requested.path)?.frontmatter;
   const titleFromFileName = !(pageFrontmatter && hasFrontmatterTitle(pageFrontmatter));
 
@@ -190,8 +191,8 @@ export default async function WikiPage({
       <DocumentTitle screen={rendered.title} wiki={wiki.name} />
       {/* US-220: the meta line follows the page's h1, the injected title or the body's own leading h1 (`leadHeading`). */}
       <Fragment key={rendered.path}>
-        {showTitleHeading ? <h1 className={titleFromFileName && !printFileTitle() ? "wr-file-title" : undefined}>{rendered.title}</h1> : rendered.leadHeading}
-        <PageMeta fields={rendered.frontmatterView} />
+        {showTitleHeading ? <h1 className={titleFromFileName && !printTitleAndMeta ? "wr-file-title" : undefined}>{rendered.title}</h1> : rendered.leadHeading}
+        <PageMeta fields={rendered.frontmatterView} printed={printTitleAndMeta} />
         {/* US-292: no "On this page" list under the title; below 1200px the top-bar button (US-282) is the way in, from 1200px the rail's copy (`PageShell`'s). */}
         {showTitleHeading || !rendered.leadHeading ? rendered.content : rendered.body}
       </Fragment>

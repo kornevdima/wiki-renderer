@@ -961,8 +961,9 @@
         min-width: 0;
     }
 }
+/* The source view shares the width but keeps its own type: the print scale's `pre` 9pt and h1 20pt would restyle its text and title. */
 @media screen and (min-width: 1200px) {
-    html[data-page-width^="a4"] .wr-column[data-width-scope] .wr-prose {
+    html[data-page-width^="a4"] .wr-column[data-width-scope] .wr-prose:not(:has(> .wr-source)) {
         @apply wr-print-type;
     }
 }

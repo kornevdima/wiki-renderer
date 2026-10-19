@@ -14,16 +14,17 @@ import { CHIP } from "./tag-chip-classes";
  * the status as the installed `StatusBadge`, "Updated" or "Created" with a date in the FR-051 format, and the tags as chips.
  * Every part is React text (escaped). A missing part is left out; with none, nothing is rendered, not even an empty element.
  * It is a `div` of spans, not a `p` of lists: the article's unlayered rules for `p`, `ul` and `li` (`wr-prose.css`)
- * would restyle them, and tag chips need no list markup beyond the roles. It prints with the page.
+ * would restyle them, and tag chips need no list markup beyond the roles. It prints only when `printed` (the print switch,
+ * `printFileTitle`); otherwise `wr-meta--no-print` leaves it out of print.
  */
-export function PageMeta({ fields }: { fields: readonly FrontmatterField[] | undefined }) {
+export function PageMeta({ fields, printed = true }: { fields: readonly FrontmatterField[] | undefined; printed?: boolean }) {
   const t = useTranslations("pageMeta");
   const tDates = useTranslations("dates");
   const meta = buildPageMeta(fields);
   if (meta === null) return null;
 
   return (
-    <div data-testid="page-meta" className="wr-meta text-sm leading-5 text-muted-foreground">
+    <div data-testid="page-meta" className={`wr-meta${printed ? "" : " wr-meta--no-print"} text-sm leading-5 text-muted-foreground`}>
       {meta.status ? (
         <StatusBadge variant={meta.status.variant} className="min-w-0 max-w-full whitespace-normal [overflow-wrap:anywhere]">
           {meta.status.word}

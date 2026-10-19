@@ -1,4 +1,4 @@
-// US-291 the page-width handle also works in edit mode (wiki/contracts/US-291-edit-width-contract.md, R1-R4).
+// US-291 the page-width handle also works in edit mode (wiki/contracts/US-291-edit-width-contract.md, R1-R4), and in the source view (R5).
 // The width is the one `wr-page-width` cookie the rendered page uses. Every test gets a fresh browser context, so each starts at Reading.
 // The one test that saves (R4b) writes into the wiki folder, so it runs only when E2E_FIXTURES_COPY=1: the server's WIKI_DIRS must then
 // be a temp copy of tests/fixtures, never the fixtures themselves.
@@ -48,7 +48,7 @@ async function dragTo(page: Page, toWidth: number): Promise<void> {
 }
 
 test.describe("US-291 page width in edit mode", () => {
-  test("R1 the handle is in the editor and shows four guides while dragging; the source view and the home list have none", async ({ page }) => {
+  test("R1 the handle is in the editor and shows four guides while dragging; the source view has it too, the home list has none", async ({ page }) => {
     await openEdit(page);
     expect(await contentWidth(page)).toBeCloseTo(READING_PX, 0);
     await expect(page.locator(GUIDE)).toHaveCount(0);
@@ -60,7 +60,7 @@ test.describe("US-291 page width in edit mode", () => {
 
     await page.goto(SOURCE);
     await expect(page.getByTestId("reader-content")).toBeVisible();
-    await expect(page.locator(HANDLE)).toHaveCount(0);
+    await expect(page.locator(HANDLE)).toHaveCount(1);
     await page.goto("/");
     await expect(page.locator("main")).toBeVisible();
     await expect(page.locator(HANDLE)).toHaveCount(0);
@@ -111,6 +111,43 @@ test.describe("US-291 page width in edit mode", () => {
     await expect(page.locator(HANDLE)).toBeVisible();
     expect(await contentWidth(page)).toBeCloseTo(820, 0);
     expect(await cookie(context)).toBe("820");
+  });
+
+  test("R5 the source view takes the same width, sets it for the page and the editor, and has Reset", async ({ page, context }) => {
+    await page.goto(SOURCE);
+    await expect(page.locator(HANDLE)).toBeVisible();
+    expect(await contentWidth(page)).toBeCloseTo(READING_PX, 0);
+    const TITLE_SIZE = await page.locator(".wr-source-title").evaluate((el) => getComputedStyle(el).fontSize);
+    await dragTo(page, PORTRAIT_PX);
+    await page.mouse.up();
+    await expect.poll(() => cookie(context)).toBe("a4-portrait");
+    // The source block follows the article.
+    // The A4 preview's print type is for the rendered page: the source keeps its 14px text and its title's size.
+    const sizes = await page.evaluate(() => ({
+      code: getComputedStyle(document.querySelector('[data-testid="source-view"]')!).fontSize,
+      title: getComputedStyle(document.querySelector(".wr-source-title")!).fontSize,
+    }));
+    expect(sizes.code).toBe("14px");
+    expect(sizes.title).toBe(TITLE_SIZE);
+    const source = (await page.getByTestId("source-view").boundingBox())!;
+    expect(source.width).toBeGreaterThan(PORTRAIT_PX - 2);
+    expect(source.width).toBeLessThanOrEqual(PORTRAIT_PX + 1);
+
+    await page.goto(PAGE);
+    await expect(page.locator(HANDLE)).toBeVisible();
+    expect(await contentWidth(page)).toBeCloseTo(PORTRAIT_PX, 0);
+    await openEdit(page);
+    expect(await contentWidth(page)).toBeCloseTo(PORTRAIT_PX, 0);
+    await dragTo(page, 820);
+    await page.mouse.up();
+    await expect.poll(() => cookie(context)).toBe("820");
+    await page.goto(SOURCE);
+    await expect(page.locator(HANDLE)).toBeVisible();
+    expect(await contentWidth(page)).toBeCloseTo(820, 0);
+    // Reset is on the source view too, and forgets the width for all three views.
+    await page.getByTestId("page-width-reset").click();
+    await expect.poll(() => cookie(context)).toBeNull();
+    expect(await contentWidth(page)).toBeCloseTo(READING_PX, 0);
   });
 
   test("R2 Home on the handle resets the width to Reading in edit mode", async ({ page, context, baseURL }) => {

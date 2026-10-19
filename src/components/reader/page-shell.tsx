@@ -78,8 +78,8 @@ export function PageShell({ wikiId, wiki, sha, tree, activePath, pageTitle, stal
   const tSearch = useTranslations("search");
   const tRail = useTranslations("pageRail");
   const tWidth = useTranslations("pageWidth");
-  // US-280 / US-291: the rendered page and the editor take a width (one stored choice); the source view and the landing keep the measure.
-  const widthScope = sourceControls?.mode === "page" || sourceControls?.mode === "edit";
+  // US-280 / US-291: the rendered page, the source view and the editor take one stored width, set from any of them; the landing keeps the measure.
+  const widthScope = sourceControls !== undefined;
   const hasProperties = frontmatter !== undefined && frontmatter.length > 0;
   const hasAnchors = outline !== undefined && outline.length > 0;
   const hasToc = outline !== undefined && showsOutline(outline);

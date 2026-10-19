@@ -228,18 +228,19 @@ test.describe("US-284 print file-name heading", () => {
     await expect(h1).toHaveText("Untitled file name");
     await page.emulateMedia({ media: "print" });
     await expect(h1).toBeVisible();
+    await expect(page.getByTestId("page-meta"), "the meta line prints with the switch on").toBeVisible();
   });
 
-  // The meta line prints and nothing of the outline does (US-292: no list under the title; the top-bar button is print:hidden), whatever happens to the heading before them.
+  // Neither the meta line (print switch off) nor anything of the outline prints (US-292: no list under the title; the top-bar button is print:hidden), whatever happens to the heading before them.
   for (const [name, path] of [["no title", NO_TITLE], ["frontmatter title", FM_TITLE], ["own h1", OWN_H1]] as const) {
-    test(`R5: ${name}: the meta line prints, there is no outline under the title, and the outline button stays out of print`, async ({ page }) => {
+    test(`R5: ${name}: the meta line does not print, there is no outline under the title, and the outline button stays out of print`, async ({ page }) => {
       await page.setViewportSize({ width: 800, height: 900 }); // below 1200 px the top-bar button shows, the rail's copy does not
       await readyAndHeading(page, path);
       await expect(page.getByTestId("page-meta")).toBeVisible();
       await expect(page.getByTestId("toc-inline")).toHaveCount(0);
       await expect(page.getByTestId("outline-trigger")).toBeVisible();
       await page.emulateMedia({ media: "print" });
-      await expect(page.getByTestId("page-meta")).toBeVisible();
+      await expect(page.getByTestId("page-meta")).toBeHidden();
       await expect(page.getByTestId("toc-inline")).toHaveCount(0);
       await expect(page.getByTestId("outline-trigger")).toBeHidden();
     });

@@ -7,7 +7,7 @@ import { changeSettingsAction } from "@/app/settings/actions";
 import { Switch } from "@/components/ui/switch";
 
 /**
- * The Print section's one control (US-277): "Print a heading made from the file name", saved as it changes. When
+ * The Print section's one control (US-277): "Print the file-name heading and page details", saved as it changes. When
  * `WIKI_PRINT_FILE_TITLE` is set the switch shows that value, disabled, with a note.
  */
 export function PrintSetting({ checked: initial, envManaged }: { checked: boolean; envManaged: boolean }) {

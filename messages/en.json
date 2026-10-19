@@ -297,8 +297,8 @@
     },
     "print": {
       "heading": "Print",
-      "label": "Print a heading made from the file name",
-      "hint": "Shown on printed pages that have no title of their own.",
+      "label": "Print the file-name heading and page details",
+      "hint": "Off: printed pages leave out the heading made from the file name and the page details line.",
       "envNote": "WIKI_PRINT_FILE_TITLE is set, so the environment decides this.",
       "saveError": "Could not save this setting. Try again."
     },

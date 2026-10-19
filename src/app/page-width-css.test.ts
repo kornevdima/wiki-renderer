@@ -50,7 +50,7 @@ describe("the A4 screen preview and print share one type scale (US-280)", () => 
     expect(prose.match(/@utility wr-print-type/g)).toHaveLength(1);
     expect(prose.match(/@apply wr-print-type/g)).toHaveLength(2);
     expect(prose).toMatch(/@utility wr-print-type\s*\{[^@]*font-size:\s*11pt;/);
-    expect(prose).toMatch(/@media screen and \(min-width: 1200px\)\s*\{\s*html\[data-page-width\^="a4"\] \.wr-column\[data-width-scope\] \.wr-prose\s*\{\s*@apply wr-print-type/);
+    expect(prose).toMatch(/@media screen and \(min-width: 1200px\)\s*\{\s*html\[data-page-width\^="a4"\] \.wr-column\[data-width-scope\] \.wr-prose:not\(:has\(> \.wr-source\)\)\s*\{\s*@apply wr-print-type/);
     expect(prose).toMatch(/@media print\s*\{\s*\.wr-prose\s*\{\s*@apply wr-print-type/);
   });
 

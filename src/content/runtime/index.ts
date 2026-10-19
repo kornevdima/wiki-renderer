@@ -147,7 +147,7 @@ export function findWiki(wikiId: string): LocalWiki | undefined {
 }
 
 /**
- * Whether the injected file-name heading prints (US-284): `WIKI_PRINT_FILE_TITLE` when set, else the config file's
+ * Whether the injected file-name heading and the page meta line print (US-284): `WIKI_PRINT_FILE_TITLE` when set, else the config file's
  * `printFileTitle`. `WIKI_DIRS` does not change this: only the wiki list is env-managed.
  */
 export function printFileTitle(): boolean {
